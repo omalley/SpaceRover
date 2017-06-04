@@ -9,14 +9,34 @@
 import SpriteKit
 
 class GameScene: SKScene {
+
+  var playerShip: SpaceShip?
+  var tileMap:SKTileMapNode?
+  
+  func findTileMap() -> SKTileMapNode? {
+    for child in children {
+      if child.name == "Tile Map Node" {
+        return (child as! SKTileMapNode)
+      }
+    }
+    return nil
+  }
+  
+  func convertTileCoord(slanted: CGPoint) -> CGPoint {
+    let staggered = slanted
+    return staggered
+  }
+  
   override func didMove(to view: SKView) {
     /* Setup your scene here */
+    let tileMap = findTileMap()
+    playerShip = SpaceShip(map: tileMap!, x:25, y:25)
   }
 
   let PAN_SLOWDOWN: CGFloat = 20.0
   
   func doPan(_ velocity: CGPoint) {
-    camera?.run(SKAction.moveBy(x: -velocity.x/PAN_SLOWDOWN, y: velocity.y/PAN_SLOWDOWN, duration: 0.1))
+    camera?.run(SKAction.moveBy(x: -velocity.x/PAN_SLOWDOWN, y: velocity.y/PAN_SLOWDOWN, duration: 0.5))
   }
 
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
