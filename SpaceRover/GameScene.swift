@@ -9,16 +9,17 @@
 import SpriteKit
 
 class GameScene: SKScene {
-    override func didMove(to view: SKView) {
-        /* Setup your scene here */
-    }
-
-  func doPan(_ velocity: CGPoint) {
-    print("pan \(velocity)")
-    camera?.run(SKAction.moveBy(x: -velocity.x/10.0, y: velocity.y/10.0, duration: 0.1))
+  override func didMove(to view: SKView) {
+    /* Setup your scene here */
   }
 
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+  let PAN_SLOWDOWN: CGFloat = 20.0
+  
+  func doPan(_ velocity: CGPoint) {
+    camera?.run(SKAction.moveBy(x: -velocity.x/PAN_SLOWDOWN, y: velocity.y/PAN_SLOWDOWN, duration: 0.1))
+  }
+
+  override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
        /* Called when a touch begins */
         
         /*for touch in touches {
@@ -39,9 +40,9 @@ class GameScene: SKScene {
             self.addChild(sprite)
             //camera?.run(SKAction.move(to: location, duration: 1.0))
           } */
-    }
+  }
    
-    override func update(_ currentTime: TimeInterval) {
-        /* Called before each frame is rendered */
-    }
+  override func update(_ currentTime: TimeInterval) {
+    /* Called before each frame is rendered */
+  }
 }
