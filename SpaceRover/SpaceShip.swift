@@ -9,60 +9,99 @@
 import SpriteKit
 
 enum HexDirection {
-  case NorthEast, East, SouthEast, SouthWest, West, NorthWest;
+  case NoAcc, NorthEast, East, SouthEast, SouthWest, West, NorthWest;
+}
+
+struct SlantPoint {
+  var x: Int
+  var y: Int
 }
 
 class SpaceShip {
   let sprite = SKSpriteNode(imageNamed:"SpaceshipUpRight")
   let tileMap: SKTileMapNode
   
-  var x: Int
-  var y: Int
-  var velocityX: Int
-  var velocityY: Int
+  var position: SlantPoint
+  var velocity: SlantPoint
   
   init (map: SKTileMapNode, x: Int, y: Int) {
     tileMap = map
-    self.x = x
-    self.y = y
-    velocityX = 0
-    velocityY = 0
-    setPosition(x: x, y: y)
+    position = SlantPoint(x: x, y: y)
+    velocity = SlantPoint(x: 0, y: 0)
+    self.sprite.position = slantToView(position)
     tileMap.addChild(sprite)
   }
   
-  func setPosition(x: Int, y: Int) {
-    sprite.position = tileMap.centerOfTile(atColumn: x - ((y+1) / 2), row: y)
+  func slantToView(_ pos: SlantPoint) -> CGPoint {
+    return tileMap.centerOfTile(atColumn: pos.x - ((pos.y+1) / 2), row: pos.y)
   }
   
-  func accellerate(direction: HexDirection) {
+  func getCurrentPosition() -> CGPoint {
+    return slantToView(position)
+  }
+  
+  func getAccellerationPosition(direction: HexDirection) -> CGPoint {
+    let newVelocity = computeNewVelocity(direction: direction, velocity: velocity)
+    let newPositionX = newVelocity.x + position.x
+    let newPositionY = newVelocity.y + position.y
+    return slantToView(SlantPoint(x: newPositionX, y: newPositionY))
+  }
+
+  /**
+   * Update velocity by accelation in the given direction
+   */
+  func computeNewVelocity(direction: HexDirection, velocity: SlantPoint) -> SlantPoint {
+    var result = velocity
     switch (direction) {
+    case .NoAcc:
+      break
     case .NorthEast:
-      velocityX += 1
-      velocityY += 1
-      sprite.run(SKAction.rotate(byAngle: 0, duration: 0))
+      result.x += 1
+      result.y += 1
     case .East:
-      velocityX += 1
-      sprite.run(SKAction.rotate(byAngle: (CGFloat(Double.pi)/3)*1, duration: 0))
+      result.x += 1
     case .SouthEast:
-      velocityY += -1
-      sprite.run(SKAction.rotate(byAngle: (CGFloat(Double.pi)/3)*2, duration: 0))
+      result.y += -1
     case .SouthWest:
-      velocityX += -1
-      velocityY += -1
-      sprite.run(SKAction.rotate(byAngle: (CGFloat(Double.pi)/3)*3, duration: 0))
+      result.x += -1
+      result.y += -1
     case .West:
-      velocityX += -1
-      sprite.run(SKAction.rotate(byAngle: (CGFloat(Double.pi)/3)*4, duration: 0))
+      result.x += -1
     case .NorthWest:
-      velocityY += 1
-      sprite.run(SKAction.rotate(byAngle: (CGFloat(Double.pi)/3)*5, duration: 0))
+      result.y += 1
+    }
+    return result
+  }
+  
+  func rotateAngle(direction: HexDirection) -> CGFloat? {
+    switch (direction) {
+    case .NoAcc:
+      return nil
+    case .NorthEast:
+      return 0
+    case .East:
+      return (CGFloat(Double.pi)/3)*1
+    case .SouthEast:
+      return (CGFloat(Double.pi)/3)*2
+    case .SouthWest:
+      return (CGFloat(Double.pi)/3)*3
+    case .West:
+      return (CGFloat(Double.pi)/3)*4
+    case .NorthWest:
+      return (CGFloat(Double.pi)/3)*5
+    }
+  }
+  
+  func accelerateShip(direction: HexDirection) {
+    velocity = computeNewVelocity(direction: direction, velocity: velocity)
+    if let angle = rotateAngle(direction: direction) {
+      sprite.run(SKAction.rotate(byAngle: angle, duration: 0))
     }
   }
   
   func move() {
-    x += velocityX
-    y += velocityY
-    setPosition(x: x, y: y)
+    position.x += velocity.x
+    position.y += velocity.y
+    sprite.position = slantToView(position)
   }
 }

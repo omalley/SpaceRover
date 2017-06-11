@@ -31,7 +31,7 @@ class GameScene: SKScene {
     /* Setup your scene here */
     let tileMap = findTileMap()
     playerShip = SpaceShip(map: tileMap!, x:36, y:25)
-    playerShip?.accellerate(direction: HexDirection.SouthWest)
+    playerShip?.accelerateShip(direction: HexDirection.SouthWest)
   }
 
   let PAN_SLOWDOWN: CGFloat = 20.0
@@ -45,24 +45,6 @@ class GameScene: SKScene {
     for _ in touches {
       playerShip?.move()
     }
-        /*for touch in touches {
-            //let location = touch.location(in: self)
-          
-            
-          
-            let sprite = SKSpriteNode(imageNamed:"SpaceshipUpRight")
-            
-            sprite.xScale = 0.5
-            sprite.yScale = 0.5
-            //sprite.position = location
-            
-            //let action = SKAction.rotate(byAngle: CGFloat(Double.pi), duration:1)
-            
-            //sprite.run(SKAction.repeatForever(action))
-          
-            self.addChild(sprite)
-            //camera?.run(SKAction.move(to: location, duration: 1.0))
-          } */
   }
    
   override func update(_ currentTime: TimeInterval) {
