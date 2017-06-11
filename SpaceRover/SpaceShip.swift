@@ -8,13 +8,53 @@
 
 import SpriteKit
 
-enum HexDirection {
+enum HexDirection: Int {
   case NoAcc, NorthEast, East, SouthEast, SouthWest, West, NorthWest;
+}
+
+extension HexDirection {
+  static func all() -> AnySequence<HexDirection> {
+    return AnySequence {
+      return SectionsGenerator()
+    }
+  }
+  
+  struct SectionsGenerator: IteratorProtocol {
+    var currentSection = 0
+    
+    mutating func next() -> HexDirection? {
+      guard let item = HexDirection(rawValue:currentSection) else {
+        return nil
+      }
+      currentSection += 1
+      return item
+    }
+  }
+  
 }
 
 struct SlantPoint {
   var x: Int
   var y: Int
+}
+
+func rotateAngle(direction: HexDirection) -> CGFloat? {
+  switch (direction) {
+  case .NoAcc:
+    return nil
+  case .NorthEast:
+    return 0
+  case .East:
+    return (CGFloat(Double.pi)/3)*5
+  case .SouthEast:
+    return (CGFloat(Double.pi)/3)*4
+  case .SouthWest:
+    return (CGFloat(Double.pi)/3)*3
+  case .West:
+    return (CGFloat(Double.pi)/3)*2
+  case .NorthWest:
+    return (CGFloat(Double.pi)/3)*1
+  }
 }
 
 class SpaceShip {
@@ -73,29 +113,10 @@ class SpaceShip {
     return result
   }
   
-  func rotateAngle(direction: HexDirection) -> CGFloat? {
-    switch (direction) {
-    case .NoAcc:
-      return nil
-    case .NorthEast:
-      return 0
-    case .East:
-      return (CGFloat(Double.pi)/3)*1
-    case .SouthEast:
-      return (CGFloat(Double.pi)/3)*2
-    case .SouthWest:
-      return (CGFloat(Double.pi)/3)*3
-    case .West:
-      return (CGFloat(Double.pi)/3)*4
-    case .NorthWest:
-      return (CGFloat(Double.pi)/3)*5
-    }
-  }
-  
   func accelerateShip(direction: HexDirection) {
     velocity = computeNewVelocity(direction: direction, velocity: velocity)
     if let angle = rotateAngle(direction: direction) {
-      sprite.run(SKAction.rotate(byAngle: angle, duration: 0))
+      sprite.run(SKAction.rotate(toAngle: angle, duration: 0))
     }
   }
   
@@ -103,5 +124,21 @@ class SpaceShip {
     position.x += velocity.x
     position.y += velocity.y
     sprite.position = slantToView(position)
+  }
+}
+
+class DirectionArrow: SKSpriteNode{
+  let direction: HexDirection
+  init(direction: HexDirection) {
+    self.direction = direction
+    let texture = SKTexture(imageNamed: "MovementArrow")
+    super.init(texture: texture, color: UIColor.clear, size: texture.size())
+    if let angle = rotateAngle(direction: direction) {
+      self.run(SKAction.rotate(toAngle: angle, duration: 0))
+    }
+  }
+  
+  required init?(coder aDecoder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
   }
 }

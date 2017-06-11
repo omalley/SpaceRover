@@ -12,6 +12,7 @@ class GameScene: SKScene {
 
   var playerShip: SpaceShip?
   var tileMap:SKTileMapNode?
+  var arrows = [DirectionArrow?](repeating: nil, count: 7)
   
   func findTileMap() -> SKTileMapNode? {
     for child in children {
@@ -31,7 +32,12 @@ class GameScene: SKScene {
     /* Setup your scene here */
     let tileMap = findTileMap()
     playerShip = SpaceShip(map: tileMap!, x:36, y:25)
-    playerShip?.accelerateShip(direction: HexDirection.SouthWest)
+    playerShip?.accelerateShip(direction: HexDirection.NorthWest)
+    for direction in HexDirection.all() {
+      arrows[direction.rawValue] = DirectionArrow(direction: direction)
+      tileMap?.addChild(arrows[direction.rawValue]!)
+      arrows[direction.rawValue]!.position = playerShip!.getAccellerationPosition(direction: direction)
+    }
   }
 
   let PAN_SLOWDOWN: CGFloat = 20.0
