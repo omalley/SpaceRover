@@ -30,7 +30,8 @@ class GameScene: SKScene {
   override func didMove(to view: SKView) {
     /* Setup your scene here */
     let tileMap = findTileMap()
-    playerShip = SpaceShip(map: tileMap!, x:25, y:25)
+    playerShip = SpaceShip(map: tileMap!, x:36, y:25)
+    playerShip?.accellerate(direction: HexDirection.SouthWest)
   }
 
   let PAN_SLOWDOWN: CGFloat = 20.0
@@ -40,8 +41,10 @@ class GameScene: SKScene {
   }
 
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-       /* Called when a touch begins */
-        
+    /* Called when a touch begins */
+    for _ in touches {
+      playerShip?.move()
+    }
         /*for touch in touches {
             //let location = touch.location(in: self)
           
