@@ -60,6 +60,7 @@ func rotateAngle(direction: HexDirection) -> CGFloat? {
 class SpaceShip: SKSpriteNode {
 
   let tileMap: SKTileMapNode
+  var arrows = [DirectionArrow?](repeating: nil, count: 7)
   
   var slant: SlantPoint
   var velocity: SlantPoint
@@ -72,6 +73,11 @@ class SpaceShip: SKSpriteNode {
     super.init(texture: texture, color: UIColor.clear, size: texture.size())
     position = slantToView(slant)
     tileMap.addChild(self)
+    for direction in HexDirection.all() {
+      arrows[direction.rawValue] = DirectionArrow(ship: self, direction: direction)
+      tileMap.addChild(arrows[direction.rawValue]!)
+      arrows[direction.rawValue]!.position = self.getAccellerationPosition(direction: direction)
+    }
   }
   
   required init?(coder aDecoder: NSCoder) {
@@ -127,6 +133,9 @@ class SpaceShip: SKSpriteNode {
     slant.x += velocity.x
     slant.y += velocity.y
     position = slantToView(slant)
+    for direction in HexDirection.all() {
+      arrows[direction.rawValue]!.position = self.getAccellerationPosition(direction: direction)
+    }
   }
 }
 

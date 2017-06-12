@@ -12,7 +12,6 @@ class GameScene: SKScene {
 
   var playerShip: SpaceShip?
   var tileMap:SKTileMapNode?
-  var arrows = [DirectionArrow?](repeating: nil, count: 7)
   
   func findTileMap() -> SKTileMapNode? {
     for child in children {
@@ -28,11 +27,6 @@ class GameScene: SKScene {
     let tileMap = findTileMap()
     tileMap?.isUserInteractionEnabled = true
     playerShip = SpaceShip(map: tileMap!, x:36, y:25)
-    for direction in HexDirection.all() {
-      arrows[direction.rawValue] = DirectionArrow(ship: playerShip!, direction: direction)
-      tileMap?.addChild(arrows[direction.rawValue]!)
-      arrows[direction.rawValue]!.position = playerShip!.getAccellerationPosition(direction: direction)
-    }
   }
 
   let PAN_SLOWDOWN: CGFloat = 20.0
@@ -44,7 +38,7 @@ class GameScene: SKScene {
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
     /* Called when a touch begins */
     for _ in touches {
-      playerShip?.move()
+      print("outside touch")
     }
   }
    
