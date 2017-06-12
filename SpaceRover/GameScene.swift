@@ -16,25 +16,20 @@ class GameScene: SKScene {
   
   func findTileMap() -> SKTileMapNode? {
     for child in children {
-      if child.name == "Tile Map Node" {
+      if child.name == "Tile Map" {
         return (child as! SKTileMapNode)
       }
     }
     return nil
   }
   
-  func convertTileCoord(slanted: CGPoint) -> CGPoint {
-    let staggered = slanted
-    return staggered
-  }
-  
   override func didMove(to view: SKView) {
     /* Setup your scene here */
     let tileMap = findTileMap()
+    tileMap?.isUserInteractionEnabled = true
     playerShip = SpaceShip(map: tileMap!, x:36, y:25)
-    playerShip?.accelerateShip(direction: HexDirection.NorthWest)
     for direction in HexDirection.all() {
-      arrows[direction.rawValue] = DirectionArrow(direction: direction)
+      arrows[direction.rawValue] = DirectionArrow(ship: playerShip!, direction: direction)
       tileMap?.addChild(arrows[direction.rawValue]!)
       arrows[direction.rawValue]!.position = playerShip!.getAccellerationPosition(direction: direction)
     }

@@ -15,11 +15,11 @@ enum HexDirection: Int {
 extension HexDirection {
   static func all() -> AnySequence<HexDirection> {
     return AnySequence {
-      return SectionsGenerator()
+      return HexDirectionGenerator()
     }
   }
   
-  struct SectionsGenerator: IteratorProtocol {
+  struct HexDirectionGenerator: IteratorProtocol {
     var currentSection = 0
     
     mutating func next() -> HexDirection? {
@@ -57,33 +57,35 @@ func rotateAngle(direction: HexDirection) -> CGFloat? {
   }
 }
 
-class SpaceShip {
-  let sprite = SKSpriteNode(imageNamed:"SpaceshipUpRight")
+class SpaceShip: SKSpriteNode {
+
   let tileMap: SKTileMapNode
   
-  var position: SlantPoint
+  var slant: SlantPoint
   var velocity: SlantPoint
   
   init (map: SKTileMapNode, x: Int, y: Int) {
     tileMap = map
-    position = SlantPoint(x: x, y: y)
+    slant = SlantPoint(x: x, y: y)
     velocity = SlantPoint(x: 0, y: 0)
-    self.sprite.position = slantToView(position)
-    tileMap.addChild(sprite)
+    let texture = SKTexture(imageNamed: "SpaceshipUpRight")
+    super.init(texture: texture, color: UIColor.clear, size: texture.size())
+    position = slantToView(slant)
+    tileMap.addChild(self)
+  }
+  
+  required init?(coder aDecoder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
   }
   
   func slantToView(_ pos: SlantPoint) -> CGPoint {
     return tileMap.centerOfTile(atColumn: pos.x - ((pos.y+1) / 2), row: pos.y)
   }
   
-  func getCurrentPosition() -> CGPoint {
-    return slantToView(position)
-  }
-  
   func getAccellerationPosition(direction: HexDirection) -> CGPoint {
     let newVelocity = computeNewVelocity(direction: direction, velocity: velocity)
-    let newPositionX = newVelocity.x + position.x
-    let newPositionY = newVelocity.y + position.y
+    let newPositionX = newVelocity.x + slant.x
+    let newPositionY = newVelocity.y + slant.y
     return slantToView(SlantPoint(x: newPositionX, y: newPositionY))
   }
 
@@ -116,29 +118,40 @@ class SpaceShip {
   func accelerateShip(direction: HexDirection) {
     velocity = computeNewVelocity(direction: direction, velocity: velocity)
     if let angle = rotateAngle(direction: direction) {
-      sprite.run(SKAction.rotate(toAngle: angle, duration: 0))
+      self.run(SKAction.rotate(toAngle: angle, duration: 0))
     }
+    move()
   }
   
   func move() {
-    position.x += velocity.x
-    position.y += velocity.y
-    sprite.position = slantToView(position)
+    slant.x += velocity.x
+    slant.y += velocity.y
+    position = slantToView(slant)
   }
 }
 
 class DirectionArrow: SKSpriteNode{
   let direction: HexDirection
-  init(direction: HexDirection) {
+  let ship: SpaceShip
+  init(ship: SpaceShip, direction: HexDirection) {
+    self.ship = ship
     self.direction = direction
     let texture = SKTexture(imageNamed: "MovementArrow")
     super.init(texture: texture, color: UIColor.clear, size: texture.size())
     if let angle = rotateAngle(direction: direction) {
       self.run(SKAction.rotate(toAngle: angle, duration: 0))
     }
+    isUserInteractionEnabled = true
   }
   
   required init?(coder aDecoder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
+  }
+
+  override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+    /* Called when a touch begins */
+    for _ in touches {
+      ship.accelerateShip(direction: direction)
+    }
   }
 }
