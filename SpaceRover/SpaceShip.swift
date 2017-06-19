@@ -145,8 +145,19 @@ class DirectionArrow: SKSpriteNode{
   init(ship: SpaceShip, direction: HexDirection) {
     self.ship = ship
     self.direction = direction
-    let texture = SKTexture(imageNamed: "MovementArrow")
-    super.init(texture: texture, color: UIColor.clear, size: texture.size())
+    
+    //Change NoAcc to the NoAcceleration with if statement. Unsure of how it works. Please help. Also needs wrapping.
+     
+    if (direction == HexDirection.NoAcc) {
+      let texture = SKTexture(imageNamed: "NoAccelerationSymbol")
+    }
+    else{
+      let texture = SKTexture(imageNamed: "MovementArrow")
+    }
+    
+    //end changes
+    
+    super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
     if let angle = rotateAngle(direction: direction) {
       self.run(SKAction.rotate(toAngle: angle, duration: 0))
     }
