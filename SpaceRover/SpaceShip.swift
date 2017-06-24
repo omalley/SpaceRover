@@ -78,6 +78,7 @@ class SpaceShip: SKSpriteNode {
       tileMap.addChild(arrows[direction.rawValue]!)
       arrows[direction.rawValue]!.position = self.getAccellerationPosition(direction: direction)
     }
+    zPosition = 10
   }
   
   required init?(coder aDecoder: NSCoder) {
@@ -155,8 +156,8 @@ class DirectionArrow: SKSpriteNode{
       let texture = SKTexture(imageNamed: "MovementArrow")
       super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
     }
-    alpha = 0.5
-    //end changes
+    alpha = 0.4
+    zPosition = 20
     
     if let angle = rotateAngle(direction: direction) {
       self.run(SKAction.rotate(toAngle: angle, duration: 0))
