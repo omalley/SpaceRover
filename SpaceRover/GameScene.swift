@@ -26,7 +26,7 @@ class GameScene: SKScene {
     /* Setup your scene here */
     let tileMap = findTileMap()
     tileMap?.isUserInteractionEnabled = true
-    playerShip = SpaceShip(map: tileMap!, x:36, y:25)
+    playerShip = SpaceShip(map: tileMap!, x:50, y:30)
   }
 
   let PAN_SLOWDOWN: CGFloat = 20.0
