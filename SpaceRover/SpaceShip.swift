@@ -150,14 +150,14 @@ class DirectionArrow: SKSpriteNode{
      
     if (direction == HexDirection.NoAcc) {
       let texture = SKTexture(imageNamed: "NoAccelerationSymbol")
-    }
-    else{
+      super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
+    } else {
       let texture = SKTexture(imageNamed: "MovementArrow")
+      super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
     }
     
     //end changes
     
-    super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
     if let angle = rotateAngle(direction: direction) {
       self.run(SKAction.rotate(toAngle: angle, duration: 0))
     }
