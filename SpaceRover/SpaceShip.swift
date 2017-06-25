@@ -155,7 +155,7 @@ class DirectionArrow: SKSpriteNode{
       let texture = SKTexture(imageNamed: "MovementArrow")
       super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
     }
-    
+    alpha = 0.5
     //end changes
     
     if let angle = rotateAngle(direction: direction) {
