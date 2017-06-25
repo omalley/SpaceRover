@@ -13,18 +13,13 @@ class GameScene: SKScene {
   var playerShip: SpaceShip?
   var tileMap:SKTileMapNode?
   
-  func findTileMap() -> SKTileMapNode? {
-    for child in children {
-      if child.name == "Tile Map" {
-        return (child as! SKTileMapNode)
-      }
-    }
-    return nil
-  }
-  
   override func didMove(to view: SKView) {
     /* Setup your scene here */
-    let tileMap = findTileMap()
+    for child in children {
+      if child.name == "Tile Map" {
+        tileMap = (child as! SKTileMapNode)
+      }
+    }
     tileMap?.isUserInteractionEnabled = true
     playerShip = SpaceShip(map: tileMap!, x:50, y:30)
   }
@@ -35,6 +30,14 @@ class GameScene: SKScene {
     camera?.run(SKAction.moveBy(x: -velocity.x/PAN_SLOWDOWN, y: velocity.y/PAN_SLOWDOWN, duration: 0.5))
   }
 
+  func doPinch(_ velocity: CGFloat) {
+    let newScale = camera!.xScale - velocity
+    if (newScale > 1.5 && newScale < 6) {
+      camera?.run(SKAction.scale(to: newScale, duration: 0.5))
+      print("Scaling by \(velocity) to \(newScale)")
+    }
+  }
+  
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
     /* Called when a touch begins */
     for _ in touches {
@@ -45,4 +48,5 @@ class GameScene: SKScene {
   override func update(_ currentTime: TimeInterval) {
     /* Called before each frame is rendered */
   }
+
 }
