@@ -10,7 +10,6 @@ import UIKit
 import SpriteKit
 
 class GameViewController: UIViewController {
-  var skView: SKView?
   var roverScene: GameScene?
 
   @IBAction func doPan(_ sender: UIPanGestureRecognizer) {
@@ -21,31 +20,23 @@ class GameViewController: UIViewController {
     roverScene?.doPinch(sender.velocity)
   }
   
-  override func viewWillTransition(to size: CGSize,
-                                   with coordinator: UIViewControllerTransitionCoordinator) {
-    super.viewWillTransition(to: size, with: coordinator)
-    //skView!.frame = CGRect(x:0, y:0, width:size.width, height:size.height);
-    //roverScene!.size = skView!.frame.size
-    print("Changing to \(size)")
-  }
-  
     override func viewDidLoad() {
         super.viewDidLoad()
-        skView = (self.view as! SKView)
+        let skView = (self.view as! SKView)
 
         if let scene = GameScene(fileNamed:"GameScene") {
           roverScene = scene
           // Configure the view.
-          skView!.showsFPS = true
-          skView!.showsNodeCount = false
+          skView.showsFPS = true
+          skView.showsNodeCount = false
             
           /* Sprite Kit applies additional optimizations to improve rendering performance */
-          skView!.ignoresSiblingOrder = true
+          skView.ignoresSiblingOrder = true
             
           /* Set the scale mode to scale to fit the window */
           scene.scaleMode = .resizeFill
             
-          skView!.presentScene(scene)
+          skView.presentScene(scene)
         }
     }
 

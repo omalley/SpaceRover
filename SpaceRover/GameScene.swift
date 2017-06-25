@@ -25,6 +25,8 @@ class GameScene: SKScene {
   }
 
   let PAN_SLOWDOWN: CGFloat = 20.0
+  let MIN_SCALE: CGFloat = 1.5
+  let MAX_SCALE: CGFloat = 6.0
   
   func doPan(_ velocity: CGPoint) {
     camera?.run(SKAction.moveBy(x: -velocity.x/PAN_SLOWDOWN, y: velocity.y/PAN_SLOWDOWN, duration: 0.5))
@@ -32,9 +34,8 @@ class GameScene: SKScene {
 
   func doPinch(_ velocity: CGFloat) {
     let newScale = camera!.xScale - velocity
-    if (newScale > 1.5 && newScale < 6) {
+    if (newScale > MIN_SCALE && newScale < MAX_SCALE) {
       camera?.run(SKAction.scale(to: newScale, duration: 0.5))
-      print("Scaling by \(velocity) to \(newScale)")
     }
   }
   
