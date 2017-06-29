@@ -125,7 +125,7 @@ class SpaceShip: SKSpriteNode {
   func accelerateShip(direction: HexDirection) {
     velocity = computeNewVelocity(direction: direction, velocity: velocity)
     if let angle = rotateAngle(direction: direction) {
-      self.run(SKAction.rotate(toAngle: angle, duration: 0))
+      self.run(SKAction.rotate(toAngle: angle, duration: 0.5))
     }
     move()
   }
@@ -133,9 +133,10 @@ class SpaceShip: SKSpriteNode {
   func move() {
     slant.x += velocity.x
     slant.y += velocity.y
-    position = slantToView(slant)
+    run(SKAction.move(to: slantToView(slant), duration: 1))
     for direction in HexDirection.all() {
-      arrows[direction.rawValue]!.position = self.getAccellerationPosition(direction: direction)
+      arrows[direction.rawValue]?.run(
+        SKAction.move(to: getAccellerationPosition(direction: direction), duration: 1))
     }
   }
 }
