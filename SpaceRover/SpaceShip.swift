@@ -57,6 +57,10 @@ func rotateAngle(direction: HexDirection) -> CGFloat? {
   }
 }
 
+let shipCollisionMask: UInt32 = 1
+let planetCollisionMask: UInt32 = 2
+let gravityCollisionMask: UInt32 = 4
+
 class SpaceShip: SKSpriteNode {
 
   let tileMap: SKTileMapNode
@@ -79,6 +83,10 @@ class SpaceShip: SKSpriteNode {
       arrows[direction.rawValue]!.position = self.getAccellerationPosition(direction: direction)
     }
     zPosition = 10
+    physicsBody = SKPhysicsBody(circleOfRadius: 1)
+    physicsBody?.categoryBitMask = shipCollisionMask
+    physicsBody?.contactTestBitMask = planetCollisionMask | gravityCollisionMask
+    physicsBody?.isDynamic = false
   }
   
   required init?(coder aDecoder: NSCoder) {

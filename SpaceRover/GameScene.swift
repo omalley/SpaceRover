@@ -22,6 +22,17 @@ class GameScene: SKScene {
     }
     tileMap?.isUserInteractionEnabled = true
     playerShip = SpaceShip(map: tileMap!, x:50, y:30)
+    for x in 0 ..< tileMap!.numberOfColumns {
+      for y in 0 ..< tileMap!.numberOfRows {
+        if let tile: SKTileGroup = tileMap!.tileGroup(atColumn: x, row: y) {
+          if let name = tile.name {
+            if name != "Space" {
+              print("tile \(x), \(y) = \(name)")
+            }
+          }
+        }
+      }
+    }
   }
 
   let PAN_SLOWDOWN: CGFloat = 20.0
