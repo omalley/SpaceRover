@@ -8,7 +8,7 @@
 
 import SpriteKit
 
-class GameScene: SKScene {
+class GameScene: SKScene, SKPhysicsContactDelegate {
 
   var playerShip: SpaceShip?
   var tileMap:SKTileMapNode?
@@ -21,18 +21,12 @@ class GameScene: SKScene {
       }
     }
     tileMap?.isUserInteractionEnabled = true
-    playerShip = SpaceShip(map: tileMap!, x:50, y:30)
-    for x in 0 ..< tileMap!.numberOfColumns {
-      for y in 0 ..< tileMap!.numberOfRows {
-        if let tile: SKTileGroup = tileMap!.tileGroup(atColumn: x, row: y) {
-          if let name = tile.name {
-            if name != "Space" {
-              print("tile \(x), \(y) = \(name)")
-            }
-          }
-        }
-      }
-    }
+    playerShip = SpaceShip(name: "player 1", slant: SlantPoint(x:50, y: 30), tiles: tileMap!)
+    tileMap?.addChild(Planet(name: "Sol", slant: SlantPoint(x:39, y:23), tiles: tileMap!))
+    tileMap?.addChild(Planet(name: "Venus", slant: SlantPoint(x:31, y:19), tiles: tileMap!))
+    tileMap?.addChild(Planet(name: "Earth", slant: SlantPoint(x:51, y:29), tiles: tileMap!))
+    tileMap?.addChild(Planet(name: "Luna", slant: SlantPoint(x:54, y:30), tiles: tileMap!))
+    physicsWorld.contactDelegate = self
   }
 
   let PAN_SLOWDOWN: CGFloat = 20.0
@@ -61,4 +55,29 @@ class GameScene: SKScene {
     /* Called before each frame is rendered */
   }
 
+  func shipCrash(ship: SpaceShip, planet: Planet) {
+    print("Ship \(ship.name!) crashed in to \(planet.name!)")
+  }
+  
+  func shipGravity(ship: SpaceShip, gravity: GravityArrow) {
+    print("Ship \(ship.name!) going through \(gravity.name!)")
+  }
+  
+  func didBegin(_ contact: SKPhysicsContact) {
+    if let ship = contact.bodyA.node as? SpaceShip {
+      if let planet = contact.bodyB.node as? Planet {
+        shipCrash(ship: ship, planet: planet)
+      } else if let gravity = contact.bodyB.node as? GravityArrow {
+        shipGravity(ship: ship, gravity: gravity)
+      }
+    } else if let ship = contact.bodyB.node as? SpaceShip {
+      if let planet = contact.bodyA.node as? Planet {
+        shipCrash(ship: ship, planet: planet)
+      } else if let gravity = contact.bodyA.node as? GravityArrow {
+        shipGravity(ship: ship, gravity: gravity)
+      }
+    } else {
+      print("contact between \(String(describing: contact.bodyA.node)) and \(String(describing: contact.bodyB.node))")
+    }
+  }
 }
