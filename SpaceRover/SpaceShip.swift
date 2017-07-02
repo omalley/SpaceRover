@@ -278,7 +278,6 @@ class DirectionArrow: SKSpriteNode{
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
     /* Called when a touch begins */
     for _ in touches {
-      print("Jet in \(direction)")
       ship.accelerateShip(direction: direction)
       ship.rotateShip(direction)
       ship.move()
