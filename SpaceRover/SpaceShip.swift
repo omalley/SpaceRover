@@ -18,10 +18,10 @@ extension HexDirection {
       return HexDirectionGenerator()
     }
   }
-  
+
   struct HexDirectionGenerator: IteratorProtocol {
     var currentSection = 0
-    
+
     mutating func next() -> HexDirection? {
       guard let item = HexDirection(rawValue:currentSection) else {
         return nil
@@ -30,7 +30,7 @@ extension HexDirection {
       return item
     }
   }
-  
+
   func invert() -> HexDirection {
     switch (self) {
     case .NoAcc:
@@ -126,10 +126,10 @@ class SpaceShip: SKSpriteNode {
 
   let tileMap: SKTileMapNode
   var arrows = [DirectionArrow?](repeating: nil, count: 7)
-  
+
   var slant: SlantPoint
   var velocity: SlantPoint
-  
+
   init (name: String, slant: SlantPoint, tiles: SKTileMapNode) {
     tileMap = tiles
     self.slant = slant
@@ -149,11 +149,11 @@ class SpaceShip: SKSpriteNode {
     physicsBody?.categoryBitMask = shipCollisionMask
     physicsBody?.contactTestBitMask = planetCollisionMask
   }
-  
+
   required init?(coder aDecoder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
-  
+
   func getAccellerationPosition(direction: HexDirection) -> CGPoint {
     let newVelocity = computeNewVelocity(direction: direction, velocity: velocity)
     let newPositionX = newVelocity.x + slant.x
@@ -163,25 +163,42 @@ class SpaceShip: SKSpriteNode {
 
   func accelerateShip(direction: HexDirection) {
     velocity = computeNewVelocity(direction: direction, velocity: velocity)
+    self.moveAccArrows()
+  }
+
+  func rotateShip (_ direction: HexDirection) {
     if let angle = rotateAngle(direction) {
       self.run(SKAction.rotate(toAngle: angle, duration: 0.5))
     }
-    move()
   }
-  
-  func move() {
-    slant.x += velocity.x
-    slant.y += velocity.y
-    run(SKAction.move(to: slantToView(slant, tiles: tileMap), duration: 1))
+
+  func moveAccArrows(){
     for direction in HexDirection.all() {
       arrows[direction.rawValue]?.run(
         SKAction.move(to: getAccellerationPosition(direction: direction), duration: 1))
     }
   }
+
+  func move() {
+    if (velocity.x == 0 && velocity.y == 0){
+      if let list = physicsBody?.allContactedBodies() {
+        for body in list {
+          if let node = body.node as? GravityArrow {
+            accelerateShip(direction: node.direction)
+          }
+        }
+      }
+    } else {
+      slant.x += velocity.x
+      slant.y += velocity.y
+      run(SKAction.move(to: slantToView(slant, tiles: tileMap), duration: 1))
+      self.moveAccArrows()
+    }
+  }
 }
 
 class Planet: SKSpriteNode{
-  
+
   init(name: String, slant: SlantPoint, tiles: SKTileMapNode) {
     let texture = SKTexture(imageNamed: name)
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
@@ -199,7 +216,7 @@ class Planet: SKSpriteNode{
     physicsBody?.contactTestBitMask = shipCollisionMask
     physicsBody?.isDynamic = false
   }
-  
+
   required init?(coder aDecoder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
@@ -207,7 +224,7 @@ class Planet: SKSpriteNode{
 
 class GravityArrow: SKSpriteNode {
   let direction: HexDirection
-  
+
   init(direction: HexDirection, planet: Planet, position: CGPoint) {
     self.direction = direction
     let texture = SKTexture(imageNamed: "GravityArrow")
@@ -223,7 +240,7 @@ class GravityArrow: SKSpriteNode {
     physicsBody?.contactTestBitMask = shipCollisionMask
     physicsBody?.isDynamic = false
   }
-  
+
   required init?(coder aDecoder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
@@ -235,9 +252,9 @@ class DirectionArrow: SKSpriteNode{
   init(ship: SpaceShip, direction: HexDirection) {
     self.ship = ship
     self.direction = direction
-    
+
     //Change NoAcc to the NoAcceleration with if statement. Unsure of how it works. Please help. Also needs wrapping.
-     
+
     if (direction == HexDirection.NoAcc) {
       let texture = SKTexture(imageNamed: "NoAccelerationSymbol")
       super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
@@ -247,13 +264,13 @@ class DirectionArrow: SKSpriteNode{
     }
     alpha = 0.4
     zPosition = 30
-    
+
     if let angle = rotateAngle(direction) {
       self.run(SKAction.rotate(toAngle: angle, duration: 0))
     }
     isUserInteractionEnabled = true
   }
-  
+
   required init?(coder aDecoder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
@@ -261,7 +278,10 @@ class DirectionArrow: SKSpriteNode{
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
     /* Called when a touch begins */
     for _ in touches {
+      print("Jet in \(direction)")
       ship.accelerateShip(direction: direction)
+      ship.rotateShip(direction)
+      ship.move()
     }
   }
 }

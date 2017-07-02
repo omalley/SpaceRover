@@ -60,7 +60,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   }
   
   func shipGravity(ship: SpaceShip, gravity: GravityArrow) {
-    print("Ship \(ship.name!) going through \(gravity.name!)")
+    print("Accelerate via \(gravity.name!)")
+    ship.accelerateShip(direction: gravity.direction)
   }
   
   func didBegin(_ contact: SKPhysicsContact) {
