@@ -125,7 +125,7 @@ let planetCollisionMask: UInt32 = 2
 class SpaceShip: SKSpriteNode {
 
   let tileMap: SKTileMapNode
-  var arrows = [DirectionArrow?](repeating: nil, count: 7)
+  var arrows : DirectionArrow?
 
   var slant: SlantPoint
   var velocity: SlantPoint
@@ -139,11 +139,9 @@ class SpaceShip: SKSpriteNode {
     self.name = name
     position = slantToView(slant, tiles: tileMap)
     tileMap.addChild(self)
-    for direction in HexDirection.all() {
-      arrows[direction.rawValue] = DirectionArrow(ship: self, direction: direction)
-      tileMap.addChild(arrows[direction.rawValue]!)
-      arrows[direction.rawValue]!.position = self.getAccellerationPosition(direction: direction)
-    }
+    arrows = DirectionArrow(ship: self)
+    arrows!.position = self.position
+    tileMap.addChild(arrows!)
     zPosition = 20
     physicsBody = SKPhysicsBody(circleOfRadius: 1)
     physicsBody?.categoryBitMask = shipCollisionMask
@@ -173,10 +171,8 @@ class SpaceShip: SKSpriteNode {
   }
 
   func moveAccArrows(){
-    for direction in HexDirection.all() {
-      arrows[direction.rawValue]?.run(
-        SKAction.move(to: getAccellerationPosition(direction: direction), duration: 1))
-    }
+    arrows?.run(
+        SKAction.move(to: getAccellerationPosition(direction: HexDirection.NoAcc), duration: 1))
   }
 
   func move() {
@@ -249,26 +245,42 @@ class GravityArrow: SKSpriteNode {
 class DirectionArrow: SKSpriteNode{
   let direction: HexDirection
   let ship: SpaceShip
+  
+  /**
+   * Constructor for the parent arrow
+   */
+  init(ship: SpaceShip) {
+    self.ship = ship
+    self.direction = HexDirection.NoAcc
+    let texture = SKTexture(imageNamed: "NoAccelerationSymbol")
+    super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
+    name = "\(direction) arrow for \(ship.name!)"
+    alpha = 0.4
+    zPosition = 30
+    isUserInteractionEnabled = true
+    for childDir in HexDirection.all() {
+      if (childDir != HexDirection.NoAcc) {
+        addChild(DirectionArrow(ship: ship, direction: childDir))
+      }
+    }
+  }
+  
+  /**
+   * Constructor for the children arrows
+   */
   init(ship: SpaceShip, direction: HexDirection) {
     self.ship = ship
     self.direction = direction
 
-    //Change NoAcc to the NoAcceleration with if statement. Unsure of how it works. Please help. Also needs wrapping.
-
-    if (direction == HexDirection.NoAcc) {
-      let texture = SKTexture(imageNamed: "NoAccelerationSymbol")
-      super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
-    } else {
-      let texture = SKTexture(imageNamed: "MovementArrow")
-      super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
-    }
-    alpha = 0.4
-    zPosition = 30
+    let texture = SKTexture(imageNamed: "MovementArrow")
+    super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
+    name = "\(direction) arrow for \(ship.name!)"
 
     if let angle = rotateAngle(direction) {
       self.run(SKAction.rotate(toAngle: angle, duration: 0))
     }
     isUserInteractionEnabled = true
+    position = findRelativePosition(direction, tiles: ship.tileMap)
   }
 
   required init?(coder aDecoder: NSCoder) {
