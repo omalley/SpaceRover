@@ -59,54 +59,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     print("Ship \(ship.name!) crashed in to \(planet.name!)")
   }
   
-  func shipExitCrash(ship: SpaceShip, planet: Planet) {
-    print("Ship \(ship.name!) exited from \(planet.name!)")
-  }
-  
-  func shipEnterGravity(ship: SpaceShip, gravity: GravityArrow) {
-    print("\(ship.name!) hit \(gravity.name!)")
-    ship.accelerateShip(direction: gravity.direction)
-    gravity.enter()
-  }
-  
-  func shipExitGravity(ship: SpaceShip, gravity: GravityArrow) {
-    print("\(ship.name!) leaving \(gravity.name!)")
-    gravity.exit()
-  }
-  
   func didBegin(_ contact: SKPhysicsContact) {
     if let ship = contact.bodyA.node as? SpaceShip {
       if let planet = contact.bodyB.node as? Planet {
         shipCrash(ship: ship, planet: planet)
       } else if let gravity = contact.bodyB.node as? GravityArrow {
-        shipEnterGravity(ship: ship, gravity: gravity)
+        ship.enterGravity(gravity)
       }
     } else if let ship = contact.bodyB.node as? SpaceShip {
       if let planet = contact.bodyA.node as? Planet {
         shipCrash(ship: ship, planet: planet)
       } else if let gravity = contact.bodyA.node as? GravityArrow {
-        shipEnterGravity(ship: ship, gravity: gravity)
+        ship.enterGravity(gravity)
       }
     } else {
       print("contact between \(String(describing: contact.bodyA.node)) and \(String(describing: contact.bodyB.node))")
-    }
-  }
-
-  func didEnd(_ contact: SKPhysicsContact) {
-    if let ship = contact.bodyA.node as? SpaceShip {
-      if let planet = contact.bodyB.node as? Planet {
-        shipExitCrash(ship: ship, planet: planet)
-      } else if let gravity = contact.bodyB.node as? GravityArrow {
-        shipExitGravity(ship: ship, gravity: gravity)
-      }
-    } else if let ship = contact.bodyB.node as? SpaceShip {
-      if let planet = contact.bodyA.node as? Planet {
-        shipExitCrash(ship: ship, planet: planet)
-      } else if let gravity = contact.bodyA.node as? GravityArrow {
-        shipExitGravity(ship: ship, gravity: gravity)
-      }
-    } else {
-      print("end contact between \(String(describing: contact.bodyA.node)) and \(String(describing: contact.bodyB.node))")
     }
   }
 }

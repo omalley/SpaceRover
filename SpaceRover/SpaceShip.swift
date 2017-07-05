@@ -121,6 +121,7 @@ func findRelativePosition(_ direction: HexDirection, tiles: SKTileMapNode) -> CG
 
 let shipCollisionMask: UInt32 = 1
 let planetCollisionMask: UInt32 = 2
+let gravityCollisionMask: UInt32 = 3
 
 class SpaceShip: SKSpriteNode {
 
@@ -129,7 +130,7 @@ class SpaceShip: SKSpriteNode {
 
   var slant: SlantPoint
   var velocity: SlantPoint
-
+  
   init (name: String, slant: SlantPoint, tiles: SKTileMapNode) {
     tileMap = tiles
     self.slant = slant
@@ -143,10 +144,10 @@ class SpaceShip: SKSpriteNode {
     arrows!.position = self.position
     tileMap.addChild(arrows!)
     zPosition = 20
-    physicsBody = SKPhysicsBody(circleOfRadius: 10)
+    physicsBody = SKPhysicsBody(circleOfRadius: 5)
     physicsBody?.categoryBitMask = shipCollisionMask
-    physicsBody?.contactTestBitMask = planetCollisionMask
-    physicsBody?.usesPreciseCollisionDetection = true
+    physicsBody?.contactTestBitMask = planetCollisionMask | gravityCollisionMask
+    physicsBody?.collisionBitMask = 0
   }
 
   required init?(coder aDecoder: NSCoder) {
@@ -158,6 +159,11 @@ class SpaceShip: SKSpriteNode {
     let newPositionX = newVelocity.x + slant.x
     let newPositionY = newVelocity.y + slant.y
     return slantToView(SlantPoint(x: newPositionX, y: newPositionY), tiles: tileMap)
+  }
+
+  func enterGravity(_ gravity: GravityArrow) {
+    print("\(self.name!) hit \(gravity.name!)")
+    accelerateShip(direction: gravity.direction)
   }
 
   func accelerateShip(direction: HexDirection) {
@@ -176,7 +182,7 @@ class SpaceShip: SKSpriteNode {
     arrows?.run(
         SKAction.move(to: getAccellerationPosition(direction: HexDirection.NoAcc), duration: 1))
   }
-
+  
   func move() {
     print("moving \(name!) by \(velocity)")
     if (velocity.x == 0 && velocity.y == 0){
@@ -213,6 +219,7 @@ class Planet: SKSpriteNode{
     physicsBody = SKPhysicsBody(circleOfRadius: 50)
     physicsBody?.categoryBitMask = planetCollisionMask
     physicsBody?.contactTestBitMask = shipCollisionMask
+    physicsBody?.collisionBitMask = 0
     physicsBody?.isDynamic = false
   }
 
@@ -223,7 +230,6 @@ class Planet: SKSpriteNode{
 
 class GravityArrow: SKSpriteNode {
   let direction: HexDirection
-  let line: SKShapeNode?
 
   init(direction: HexDirection, planet: Planet, position: CGPoint) {
     self.direction = direction
@@ -236,30 +242,18 @@ class GravityArrow: SKSpriteNode {
                                  CGPoint(x:-55, y:32),
                                  CGPoint(x:0, y:64),
                                  CGPoint(x:111, y:0)])
-    line = SKShapeNode(path: bodyShape)
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
     self.name = "Gravity \(direction) toward \(planet.name!)"
     zPosition = 10
     alpha = 0.6
     self.position = position
-    physicsBody = SKPhysicsBody(edgeLoopFrom: bodyShape)
-    physicsBody?.categoryBitMask = planetCollisionMask
+    physicsBody = SKPhysicsBody(polygonFrom: bodyShape)
+    physicsBody?.categoryBitMask = gravityCollisionMask
     physicsBody?.contactTestBitMask = shipCollisionMask
+    physicsBody?.collisionBitMask = 0
     physicsBody?.isDynamic = false
-    let color = UIColor(red: 1.0, green: 0.1 * CGFloat(direction.rawValue), blue: 0.0, alpha: 1.0)
-    line!.fillColor = color
-    line!.isHidden = true
-    addChild(line!)
     let sixtyDegree = CGFloat(Double.pi) / 3
     run(SKAction.rotate(byAngle: sixtyDegree + rotateAngle(direction)!, duration: 0))
-  }
-
-  func enter() {
-    line?.run(SKAction.unhide())
-  }
-  
-  func exit() {
-    line?.run(SKAction.hide())
   }
 
   required init?(coder aDecoder: NSCoder) {
