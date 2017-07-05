@@ -143,9 +143,10 @@ class SpaceShip: SKSpriteNode {
     arrows!.position = self.position
     tileMap.addChild(arrows!)
     zPosition = 20
-    physicsBody = SKPhysicsBody(circleOfRadius: 1)
+    physicsBody = SKPhysicsBody(circleOfRadius: 10)
     physicsBody?.categoryBitMask = shipCollisionMask
     physicsBody?.contactTestBitMask = planetCollisionMask
+    physicsBody?.usesPreciseCollisionDetection = true
   }
 
   required init?(coder aDecoder: NSCoder) {
@@ -171,11 +172,13 @@ class SpaceShip: SKSpriteNode {
   }
 
   func moveAccArrows(){
+    arrows?.removeAllActions()
     arrows?.run(
         SKAction.move(to: getAccellerationPosition(direction: HexDirection.NoAcc), duration: 1))
   }
 
   func move() {
+    print("moving \(name!) by \(velocity)")
     if (velocity.x == 0 && velocity.y == 0){
       if let list = physicsBody?.allContactedBodies() {
         for body in list {
@@ -220,21 +223,43 @@ class Planet: SKSpriteNode{
 
 class GravityArrow: SKSpriteNode {
   let direction: HexDirection
+  let line: SKShapeNode?
 
   init(direction: HexDirection, planet: Planet, position: CGPoint) {
     self.direction = direction
     let texture = SKTexture(imageNamed: "GravityArrow")
+    // Create the hexagon with the additional wedge toward the planet
+    let bodyShape = CGMutablePath()
+    bodyShape.addLines(between: [CGPoint(x:111, y:0),
+                                 CGPoint(x:0, y:-64),
+                                 CGPoint(x:-55, y:-32),
+                                 CGPoint(x:-55, y:32),
+                                 CGPoint(x:0, y:64),
+                                 CGPoint(x:111, y:0)])
+    line = SKShapeNode(path: bodyShape)
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
     self.name = "Gravity \(direction) toward \(planet.name!)"
     zPosition = 10
     alpha = 0.6
     self.position = position
-    let sixtyDegree = CGFloat(Double.pi) / 3
-    run(SKAction.rotate(byAngle: sixtyDegree + rotateAngle(direction)!, duration: 0))
-    physicsBody = SKPhysicsBody(circleOfRadius: 50)
+    physicsBody = SKPhysicsBody(edgeLoopFrom: bodyShape)
     physicsBody?.categoryBitMask = planetCollisionMask
     physicsBody?.contactTestBitMask = shipCollisionMask
     physicsBody?.isDynamic = false
+    let color = UIColor(red: 1.0, green: 0.1 * CGFloat(direction.rawValue), blue: 0.0, alpha: 1.0)
+    line!.fillColor = color
+    line!.isHidden = true
+    addChild(line!)
+    let sixtyDegree = CGFloat(Double.pi) / 3
+    run(SKAction.rotate(byAngle: sixtyDegree + rotateAngle(direction)!, duration: 0))
+  }
+
+  func enter() {
+    line?.run(SKAction.unhide())
+  }
+  
+  func exit() {
+    line?.run(SKAction.hide())
   }
 
   required init?(coder aDecoder: NSCoder) {
@@ -242,6 +267,9 @@ class GravityArrow: SKSpriteNode {
   }
 }
 
+/**
+ * The arrows that let the user pick the direction.
+ */
 class DirectionArrow: SKSpriteNode{
   let direction: HexDirection
   let ship: SpaceShip
