@@ -49,6 +49,25 @@ extension HexDirection {
       return .NorthWest
     }
   }
+
+  func rotateAngle() -> Double {
+    switch (self) {
+    case .NoAcc:
+      return 0
+    case .NorthEast:
+      return 0
+    case .East:
+      return 5*Double.pi/3
+    case .SouthEast:
+      return 4*Double.pi/3
+    case .SouthWest:
+      return 3*Double.pi/3
+    case .West:
+      return 2*Double.pi/3
+    case .NorthWest:
+      return 1*Double.pi/3
+    }
+  }
 }
 
 struct SlantPoint {
@@ -56,24 +75,6 @@ struct SlantPoint {
   var y: Int
 }
 
-func rotateAngle(_ direction: HexDirection) -> CGFloat? {
-  switch (direction) {
-  case .NoAcc:
-    return nil
-  case .NorthEast:
-    return 0
-  case .East:
-    return (CGFloat(Double.pi)/3)*5
-  case .SouthEast:
-    return (CGFloat(Double.pi)/3)*4
-  case .SouthWest:
-    return (CGFloat(Double.pi)/3)*3
-  case .West:
-    return (CGFloat(Double.pi)/3)*2
-  case .NorthWest:
-    return (CGFloat(Double.pi)/3)*1
-  }
-}
 
 /**
  * Update velocity by accelation in the given direction
@@ -130,6 +131,7 @@ class SpaceShip: SKSpriteNode {
 
   var slant: SlantPoint
   var velocity: SlantPoint
+  var direction = HexDirection.NorthEast
   
   init (name: String, slant: SlantPoint, tiles: SKTileMapNode) {
     tileMap = tiles
@@ -171,9 +173,20 @@ class SpaceShip: SKSpriteNode {
     self.moveAccArrows()
   }
 
-  func rotateShip (_ direction: HexDirection) {
-    if let angle = rotateAngle(direction) {
-      self.run(SKAction.rotate(toAngle: angle, duration: 0.5))
+  func rotateShip (_ newDirection : HexDirection) {
+    if newDirection != direction && newDirection != HexDirection.NoAcc {
+      var rotateBy = (newDirection.rotateAngle() - direction.rotateAngle())
+      if (rotateBy >= 0) {
+        while (rotateBy > Double.pi) {
+          rotateBy -= 2*Double.pi
+        }
+      } else {
+        while (rotateBy < -Double.pi) {
+          rotateBy += 2*Double.pi
+        }
+      }
+      direction = newDirection
+      self.run(SKAction.rotate(byAngle: CGFloat(rotateBy), duration: 0.5))
     }
   }
 
@@ -252,8 +265,8 @@ class GravityArrow: SKSpriteNode {
     physicsBody?.contactTestBitMask = shipCollisionMask
     physicsBody?.collisionBitMask = 0
     physicsBody?.isDynamic = false
-    let sixtyDegree = CGFloat(Double.pi) / 3
-    run(SKAction.rotate(byAngle: sixtyDegree + rotateAngle(direction)!, duration: 0))
+    let sixtyDegree = Double.pi / 3
+    run(SKAction.rotate(byAngle: CGFloat(sixtyDegree + direction.rotateAngle()), duration: 0))
   }
 
   required init?(coder aDecoder: NSCoder) {
@@ -298,9 +311,7 @@ class DirectionArrow: SKSpriteNode{
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
     name = "\(direction) arrow for \(ship.name!)"
 
-    if let angle = rotateAngle(direction) {
-      self.run(SKAction.rotate(toAngle: angle, duration: 0))
-    }
+    self.run(SKAction.rotate(toAngle: CGFloat(direction.rotateAngle()), duration: 0))
     isUserInteractionEnabled = true
     position = findRelativePosition(direction, tiles: ship.tileMap)
   }
