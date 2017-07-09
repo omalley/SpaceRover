@@ -9,7 +9,7 @@
 import SpriteKit
 
 enum HexDirection: Int {
-  case NoAcc, NorthEast, East, SouthEast, SouthWest, West, NorthWest;
+  case NoAcc, West, NorthWest, NorthEast, East, SouthEast, SouthWest;
 }
 
 extension HexDirection {
@@ -50,6 +50,18 @@ extension HexDirection {
     }
   }
 
+  func clockwise(turns: Int) -> HexDirection {
+    if (self == .NoAcc) {
+      return .NoAcc
+    } else {
+      var newValue = ((self.rawValue - 1) + turns) % 6
+      if (newValue < 0) {
+        newValue += 6
+      }
+      return HexDirection(rawValue: newValue + 1)!
+    }
+  }
+  
   func rotateAngle() -> Double {
     switch (self) {
     case .NoAcc:
@@ -70,9 +82,13 @@ extension HexDirection {
   }
 }
 
-struct SlantPoint {
+struct SlantPoint: Equatable {
   var x: Int
   var y: Int
+}
+
+func ==(lhs: SlantPoint, rhs: SlantPoint) -> Bool {
+  return lhs.x == rhs.x && lhs.y == rhs.y
 }
 
 
@@ -187,6 +203,22 @@ class SpaceShip: SKSpriteNode {
     moveAccArrows()
   }
 
+  func inOrbit() -> Planet? {
+    for body in physicsBody!.allContactedBodies() {
+      if let gravity = body.node as? GravityArrow {
+        let zero = SlantPoint(x: 0, y: 0)
+        let clockwise = computeNewVelocity(direction: gravity.direction.clockwise(turns: 1),
+                                           velocity: zero)
+        let counterClockwise = computeNewVelocity(direction: gravity.direction.clockwise(turns: -1),
+                                                  velocity: zero)
+        if velocity == clockwise || velocity == counterClockwise {
+          return gravity.planet
+        }
+      }
+    }
+    return nil
+  }
+  
   func rotateShip (_ newDirection : HexDirection) {
     if newDirection != direction && newDirection != HexDirection.NoAcc {
       var rotateBy = (newDirection.rotateAngle() - direction.rotateAngle())
@@ -205,7 +237,11 @@ class SpaceShip: SKSpriteNode {
   }
 
   func getInformation() -> String {
-    return "\(name!)\nFuel: \(fuel)"
+    if let planet = inOrbit() {
+      return "\(name!)\nFuel: \(fuel)\n\(planet.name!) orbit"
+    } else {
+      return "\(name!)\nFuel: \(fuel)"
+    }
   }
   
   func useFuel(_ units: Int) {
@@ -243,7 +279,7 @@ class SpaceShip: SKSpriteNode {
   }
 }
 
-class Planet: SKSpriteNode{
+class Planet: SKSpriteNode {
 
   convenience init(name: String, slant: SlantPoint, tiles: SKTileMapNode) {
     self.init(name:name, image:name, slant:slant, tiles:tiles)
@@ -281,9 +317,11 @@ class Planet: SKSpriteNode{
 
 class GravityArrow: SKSpriteNode {
   let direction: HexDirection
+  let planet: Planet
 
   init(direction: HexDirection, planet: Planet, position: CGPoint) {
     self.direction = direction
+    self.planet = planet
     let texture = SKTexture(imageNamed: "GravityArrow")
     // Create the hexagon with the additional wedge toward the planet
     let bodyShape = CGMutablePath()
@@ -329,7 +367,7 @@ class DirectionArrow: SKSpriteNode{
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
     name = "\(direction) arrow for \(ship.name!)"
     alpha = 0.4
-    zPosition = 30
+    zPosition = 50
     isUserInteractionEnabled = true
     for childDir in HexDirection.all() {
       if (childDir != HexDirection.NoAcc) {
@@ -348,6 +386,7 @@ class DirectionArrow: SKSpriteNode{
     let texture = SKTexture(imageNamed: "MovementArrow")
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
     name = "\(direction) arrow for \(ship.name!)"
+    alpha = 1.0
 
     self.run(SKAction.rotate(toAngle: CGFloat(direction.rotateAngle()), duration: 0))
     isUserInteractionEnabled = true
