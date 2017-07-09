@@ -99,6 +99,7 @@ func computeNewVelocity(direction: HexDirection, velocity: SlantPoint) -> SlantP
   case .NorthWest:
     result.y += 1
   }
+  //Sing us a song, you're the piano man! Sing us a song, tonight! Cuz we're all in the mood for a melody, an you've got us feeling alright!
   return result
 }
 
@@ -124,20 +125,28 @@ let shipCollisionMask: UInt32 = 1
 let planetCollisionMask: UInt32 = 2
 let gravityCollisionMask: UInt32 = 3
 
+protocol ShipInformationWatcher {
+  func updateShipInformation(_ msg: String)
+}
+
 class SpaceShip: SKSpriteNode {
 
   let tileMap: SKTileMapNode
+  let fuelCapacity = 20
   var arrows : DirectionArrow?
 
   var slant: SlantPoint
   var velocity: SlantPoint
   var direction = HexDirection.NorthEast
+  var fuel: Int
+  var watcher: ShipInformationWatcher?
   
   init (name: String, slant: SlantPoint, tiles: SKTileMapNode) {
     tileMap = tiles
     self.slant = slant
     velocity = SlantPoint(x: 0, y: 0)
     let texture = SKTexture(imageNamed: "SpaceshipUpRight")
+    fuel = fuelCapacity
     super.init(texture: texture, color: UIColor.clear, size: texture.size())
     self.name = name
     position = slantToView(slant, tiles: tileMap)
@@ -156,6 +165,11 @@ class SpaceShip: SKSpriteNode {
     fatalError("init(coder:) has not been implemented")
   }
 
+  func setWatcher(_ newWatcher: ShipInformationWatcher?) {
+    watcher = newWatcher
+    watcher?.updateShipInformation(getInformation())
+  }
+  
   func getAccellerationPosition(direction: HexDirection) -> CGPoint {
     let newVelocity = computeNewVelocity(direction: direction, velocity: velocity)
     let newPositionX = newVelocity.x + slant.x
@@ -170,7 +184,7 @@ class SpaceShip: SKSpriteNode {
 
   func accelerateShip(direction: HexDirection) {
     velocity = computeNewVelocity(direction: direction, velocity: velocity)
-    self.moveAccArrows()
+    moveAccArrows()
   }
 
   func rotateShip (_ newDirection : HexDirection) {
@@ -190,6 +204,19 @@ class SpaceShip: SKSpriteNode {
     }
   }
 
+  func getInformation() -> String {
+    return "\(name!)\nFuel: \(fuel)"
+  }
+  
+  func useFuel(_ units: Int) {
+    fuel -= units
+    watcher?.updateShipInformation(getInformation())
+    if (fuel == 0) {
+      arrows?.hideAcceleration()
+      //"We're outta rockets sir."
+    }
+  }
+  
   func moveAccArrows(){
     arrows?.removeAllActions()
     arrows?.run(
@@ -211,15 +238,26 @@ class SpaceShip: SKSpriteNode {
       slant.y += velocity.y
       run(SKAction.move(to: slantToView(slant, tiles: tileMap), duration: 1))
       self.moveAccArrows()
+      //vroom vroom
     }
   }
 }
 
 class Planet: SKSpriteNode{
 
-  init(name: String, slant: SlantPoint, tiles: SKTileMapNode) {
-    let texture = SKTexture(imageNamed: name)
+  convenience init(name: String, slant: SlantPoint, tiles: SKTileMapNode) {
+    self.init(name:name, image:name, slant:slant, tiles:tiles)
+  }
+  
+  init(name: String, image: String, slant: SlantPoint, tiles: SKTileMapNode) {
+    let texture = SKTexture(imageNamed: image)
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
+    let nameLabel = SKLabelNode(text: name)
+    nameLabel.zPosition = 1
+    nameLabel.position = CGPoint(x: 0, y: 25)
+    nameLabel.fontSize = 20
+    nameLabel.fontName = "Copperplate"
+    addChild(nameLabel)
     self.name = name
     position = slantToView(slant, tiles: tiles)
     zPosition = 10
@@ -320,11 +358,26 @@ class DirectionArrow: SKSpriteNode{
     fatalError("init(coder:) has not been implemented")
   }
 
+  func hideAcceleration() {
+    for child in children {
+      child.isHidden = true
+    }
+  }
+  
+  func unhideAcceleration() {
+    for child in children {
+      child.isHidden = false
+    }
+  }
+  
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
     /* Called when a touch begins */
     for _ in touches {
-      ship.accelerateShip(direction: direction)
-      ship.rotateShip(direction)
+      if (direction != HexDirection.NoAcc) {
+        ship.accelerateShip(direction: direction)
+        ship.useFuel(1)
+        ship.rotateShip(direction)
+      }
       ship.move()
     }
   }

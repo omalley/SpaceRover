@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5A0F034B1F0F2C4E00DD87C7 /* GameKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A0F034A1F0F2C4E00DD87C7 /* GameKit.framework */; };
 		B18473C41EDE5E74000FF428 /* RoverTiles.sks in Resources */ = {isa = PBXBuildFile; fileRef = B18473C31EDE5E74000FF428 /* RoverTiles.sks */; };
 		B18473C61EE4BC51000FF428 /* SpaceShip.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18473C51EE4BC51000FF428 /* SpaceShip.swift */; };
 		B18F99071EDBD6DB001269EA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18F99061EDBD6DB001269EA /* AppDelegate.swift */; };
@@ -38,6 +39,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5A0F034A1F0F2C4E00DD87C7 /* GameKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameKit.framework; path = System/Library/Frameworks/GameKit.framework; sourceTree = SDKROOT; };
 		B18473C31EDE5E74000FF428 /* RoverTiles.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = RoverTiles.sks; sourceTree = "<group>"; };
 		B18473C51EE4BC51000FF428 /* SpaceShip.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpaceShip.swift; sourceTree = "<group>"; };
 		B18F99031EDBD6DB001269EA /* SpaceRover.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpaceRover.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -62,6 +64,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5A0F034B1F0F2C4E00DD87C7 /* GameKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -82,6 +85,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5A0F03491F0F2C4E00DD87C7 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				5A0F034A1F0F2C4E00DD87C7 /* GameKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		B18F98FA1EDBD6DB001269EA = {
 			isa = PBXGroup;
 			children = (
@@ -89,6 +100,7 @@
 				B18F991E1EDBD6DB001269EA /* SpaceRoverTests */,
 				B18F99291EDBD6DB001269EA /* SpaceRoverUITests */,
 				B18F99041EDBD6DB001269EA /* Products */,
+				5A0F03491F0F2C4E00DD87C7 /* Frameworks */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -208,6 +220,11 @@
 					B18F99021EDBD6DB001269EA = {
 						CreatedOnToolsVersion = 7.1;
 						LastSwiftMigration = 0830;
+						SystemCapabilities = {
+							com.apple.GameCenter = {
+								enabled = 1;
+							};
+						};
 					};
 					B18F991A1EDBD6DB001269EA = {
 						CreatedOnToolsVersion = 7.1;
