@@ -16,7 +16,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     "Venus": SlantPoint(x:31, y:19),
     "Earth": SlantPoint(x:51, y:29),
     "Luna": SlantPoint(x:54, y:30),
-    "Mars": SlantPoint(x:40, y:43)
+    "Mars": SlantPoint(x:40, y:43),
+    "Jupiter": SlantPoint(x:59, y:59),
+    "Callisto": SlantPoint(x:54, y:59),
   ]
 
   var playerShip: SpaceShip?
@@ -32,7 +34,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     tileMap?.isUserInteractionEnabled = true
     //Adding Ships
-    playerShip = SpaceShip(name: "Player 1", slant: SlantPoint(x:50, y: 30), tiles: tileMap!)
+    playerShip = SpaceShip(name: "Vanguard II", slant: SlantPoint(x:50, y: 30), tiles: tileMap!)
+    playerShip!.setWatcher(watcher)
+    
+    playerShip = SpaceShip(name: "Hyperion", slant: SlantPoint(x:56, y: 30), tiles: tileMap!)
     playerShip!.setWatcher(watcher)
     
     //Adding Planets
