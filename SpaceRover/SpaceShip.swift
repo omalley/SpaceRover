@@ -8,6 +8,19 @@
 
 import SpriteKit
 
+struct SlantPoint: Equatable {
+  var x: Int
+  var y: Int
+  
+  static func ==(lhs: SlantPoint, rhs: SlantPoint) -> Bool {
+    return lhs.x == rhs.x && lhs.y == rhs.y
+  }
+  
+  static func +(lhs: SlantPoint, rhs: SlantPoint) -> SlantPoint {
+    return SlantPoint(x: lhs.x + rhs.x, y: lhs.y + rhs.y)
+  }
+}
+
 enum HexDirection: Int {
   case NoAcc, West, NorthWest, NorthEast, East, SouthEast, SouthWest;
 }
@@ -80,43 +93,28 @@ extension HexDirection {
       return 1*Double.pi/3
     }
   }
-}
-
-struct SlantPoint: Equatable {
-  var x: Int
-  var y: Int
-}
-
-func ==(lhs: SlantPoint, rhs: SlantPoint) -> Bool {
-  return lhs.x == rhs.x && lhs.y == rhs.y
-}
-
-
-/**
- * Update velocity by accelation in the given direction
- */
-func computeNewVelocity(direction: HexDirection, velocity: SlantPoint) -> SlantPoint {
-  var result = velocity
-  switch (direction) {
-  case .NoAcc:
-    break
-  case .NorthEast:
-    result.x += 1
-    result.y += 1
-  case .East:
-    result.x += 1
-  case .SouthEast:
-    result.y += -1
-  case .SouthWest:
-    result.x += -1
-    result.y += -1
-  case .West:
-    result.x += -1
-  case .NorthWest:
-    result.y += 1
+  
+  /**
+   * Get the SlantPoint vector going in this direction
+   */
+  func toSlant() -> SlantPoint {
+    switch (self) {
+    case .NoAcc:
+      return SlantPoint(x: 0, y: 0)
+    case .NorthEast:
+      return SlantPoint(x: 1, y: 1)
+    case .East:
+      return SlantPoint(x: 1, y: 0)
+    case .SouthEast:
+      return SlantPoint(x: 0, y: -1)
+    case .SouthWest:
+      return SlantPoint(x: -1, y: -1)
+    case .West:
+      return SlantPoint(x: -1, y: 0)
+    case .NorthWest:
+      return SlantPoint(x: 0, y: 1)
+    }
   }
-  //Sing us a song, you're the piano man! Sing us a song, tonight! Cuz we're all in the mood for a melody, an you've got us feeling alright!
-  return result
 }
 
 func slantToView(_ pos: SlantPoint, tiles: SKTileMapNode) -> CGPoint {
@@ -130,7 +128,7 @@ func findRelativePosition(_ direction: HexDirection, tiles: SKTileMapNode) -> CG
   // pick a point that won't cause the relative points to go out of bounds
   let originSlant = SlantPoint(x: 2, y: 2)
   // get the relative slant point
-  let slant = computeNewVelocity(direction: direction, velocity: originSlant)
+  let slant = originSlant + direction.toSlant()
   let posn = slantToView(slant, tiles: tiles)
   // subtract off the origin
   let origin = slantToView(originSlant, tiles: tiles)
@@ -187,10 +185,9 @@ class SpaceShip: SKSpriteNode {
   }
   
   func getAccellerationPosition(direction: HexDirection) -> CGPoint {
-    let newVelocity = computeNewVelocity(direction: direction, velocity: velocity)
-    let newPositionX = newVelocity.x + slant.x
-    let newPositionY = newVelocity.y + slant.y
-    return slantToView(SlantPoint(x: newPositionX, y: newPositionY), tiles: tileMap)
+    let newVelocity = velocity + direction.toSlant()
+    let newPosition = slant + newVelocity
+    return slantToView(newPosition, tiles: tileMap)
   }
 
   func enterGravity(_ gravity: GravityArrow) {
@@ -199,18 +196,16 @@ class SpaceShip: SKSpriteNode {
   }
 
   func accelerateShip(direction: HexDirection) {
-    velocity = computeNewVelocity(direction: direction, velocity: velocity)
+    velocity = velocity + direction.toSlant()
     moveAccArrows()
   }
 
   func inOrbit() -> Planet? {
     for body in physicsBody!.allContactedBodies() {
       if let gravity = body.node as? GravityArrow {
-        let zero = SlantPoint(x: 0, y: 0)
-        let clockwise = computeNewVelocity(direction: gravity.direction.clockwise(turns: 1),
-                                           velocity: zero)
-        let counterClockwise = computeNewVelocity(direction: gravity.direction.clockwise(turns: -1),
-                                                  velocity: zero)
+        // Is the velocity 60 degrees from the gravity?
+        let clockwise = gravity.direction.clockwise(turns: 1).toSlant()
+        let counterClockwise = gravity.direction.clockwise(turns: -1).toSlant()
         if velocity == clockwise || velocity == counterClockwise {
           return gravity.planet
         }
