@@ -148,7 +148,7 @@ class SpaceShip: SKSpriteNode {
 
   let tileMap: SKTileMapNode
   let fuelCapacity = 20
-  var arrows : DirectionArrow?
+  var arrows : DirectionKeypad?
 
   var slant: SlantPoint
   var velocity: SlantPoint
@@ -166,7 +166,7 @@ class SpaceShip: SKSpriteNode {
     self.name = name
     position = slantToView(slant, tiles: tileMap)
     tileMap.addChild(self)
-    arrows = DirectionArrow(ship: self)
+    arrows = DirectionKeypad(ship: self)
     arrows!.position = self.position
     tileMap.addChild(arrows!)
     zPosition = 20
@@ -346,6 +346,43 @@ class GravityArrow: SKSpriteNode {
   }
 }
 
+class DirectionKeypad: SKNode {
+  init(ship: SpaceShip) {
+    super.init()
+    name = "DirectionKeypad for \(ship.name!)"
+    alpha = 1
+    zPosition = 50
+    isUserInteractionEnabled = true
+    for childDir in HexDirection.all() {
+      addChild(DirectionArrow(ship: ship, direction: childDir))
+    }
+  }
+
+  required init?(coder aDecoder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+
+  func outOfFuel() {
+    for child in children {
+      if let arrow = child as? DirectionArrow {
+        if arrow.direction != .NoAcc {
+          arrow.isHidden = true
+        }
+      }
+    }
+  }
+  
+  func refuelled() {
+    for child in children {
+      if let arrow = child as? DirectionArrow {
+        if arrow.direction != .NoAcc {
+          arrow.isHidden = false
+        }
+      }
+    }
+  }
+}
+
 /**
  * The arrows that let the user pick the direction.
  */
@@ -354,36 +391,20 @@ class DirectionArrow: SKSpriteNode{
   let ship: SpaceShip
   
   /**
-   * Constructor for the parent arrow
-   */
-  init(ship: SpaceShip) {
-    self.ship = ship
-    self.direction = HexDirection.NoAcc
-    let texture = SKTexture(imageNamed: "NoAccelerationSymbol")
-    super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
-    name = "\(direction) arrow for \(ship.name!)"
-    alpha = 1
-    zPosition = 50
-    isUserInteractionEnabled = true
-    physicsBody = createPhysics()
-    for childDir in HexDirection.all() {
-      if (childDir != HexDirection.NoAcc) {
-        addChild(DirectionArrow(ship: ship, direction: childDir))
-      }
-    }
-  }
-  
-  /**
    * Constructor for the children arrows
    */
   init(ship: SpaceShip, direction: HexDirection) {
     self.ship = ship
     self.direction = direction
-
-    let texture = SKTexture(imageNamed: "MovementArrow")
-    super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
+    if (direction == HexDirection.NoAcc) {
+      let texture = SKTexture(imageNamed: "NoAccelerationSymbol")
+      super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
+    } else {
+      let texture = SKTexture(imageNamed: "MovementArrow")
+      super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
+    }
     name = "\(direction) arrow for \(ship.name!)"
-    alpha = 0.8
+    alpha = 0.4
 
     self.run(SKAction.rotate(toAngle: CGFloat(direction.rotateAngle()), duration: 0))
     isUserInteractionEnabled = true
@@ -402,18 +423,6 @@ class DirectionArrow: SKSpriteNode{
     newPhysicsBody.collisionBitMask = 0
     newPhysicsBody.isDynamic = true
     return newPhysicsBody
-  }
-  
-  func outOfFuel() {
-    for child in children {
-      child.isHidden = true
-    }
-  }
-  
-  func refuelled() {
-    for child in children {
-      child.isHidden = false
-    }
   }
   
   func overPlanet(_ planet: Planet) {
