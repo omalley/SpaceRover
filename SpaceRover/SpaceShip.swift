@@ -135,9 +135,10 @@ func findRelativePosition(_ direction: HexDirection, tiles: SKTileMapNode) -> CG
   return CGPoint(x: posn.x - origin.x, y: posn.y - origin.y)
 }
 
-let shipCollisionMask: UInt32 = 1
-let planetCollisionMask: UInt32 = 2
-let gravityCollisionMask: UInt32 = 3
+let shipContactMask: UInt32 = 1
+let planetContactMask: UInt32 = 2
+let gravityContactMask: UInt32 = 4
+let accelerationContactMask: UInt32 = 8
 
 protocol ShipInformationWatcher {
   func updateShipInformation(_ msg: String)
@@ -170,8 +171,8 @@ class SpaceShip: SKSpriteNode {
     tileMap.addChild(arrows!)
     zPosition = 20
     physicsBody = SKPhysicsBody(circleOfRadius: 5)
-    physicsBody?.categoryBitMask = shipCollisionMask
-    physicsBody?.contactTestBitMask = planetCollisionMask | gravityCollisionMask
+    physicsBody?.categoryBitMask = shipContactMask
+    physicsBody?.contactTestBitMask = planetContactMask | gravityContactMask
     physicsBody?.collisionBitMask = 0
   }
 
@@ -243,7 +244,7 @@ class SpaceShip: SKSpriteNode {
     fuel -= units
     watcher?.updateShipInformation(getInformation())
     if (fuel == 0) {
-      arrows?.hideAcceleration()
+      arrows?.outOfFuel()
       //"We're outta rockets sir."
     }
   }
@@ -299,8 +300,8 @@ class Planet: SKSpriteNode {
       }
     }
     physicsBody = SKPhysicsBody(circleOfRadius: 50)
-    physicsBody?.categoryBitMask = planetCollisionMask
-    physicsBody?.contactTestBitMask = shipCollisionMask
+    physicsBody?.categoryBitMask = planetContactMask
+    physicsBody?.contactTestBitMask = shipContactMask | accelerationContactMask
     physicsBody?.collisionBitMask = 0
     physicsBody?.isDynamic = false
   }
@@ -332,8 +333,8 @@ class GravityArrow: SKSpriteNode {
     alpha = 0.6
     self.position = position
     physicsBody = SKPhysicsBody(polygonFrom: bodyShape)
-    physicsBody?.categoryBitMask = gravityCollisionMask
-    physicsBody?.contactTestBitMask = shipCollisionMask
+    physicsBody?.categoryBitMask = gravityContactMask
+    physicsBody?.contactTestBitMask = shipContactMask
     physicsBody?.collisionBitMask = 0
     physicsBody?.isDynamic = false
     let sixtyDegree = Double.pi / 3
@@ -361,9 +362,10 @@ class DirectionArrow: SKSpriteNode{
     let texture = SKTexture(imageNamed: "NoAccelerationSymbol")
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
     name = "\(direction) arrow for \(ship.name!)"
-    alpha = 0.4
+    alpha = 1
     zPosition = 50
     isUserInteractionEnabled = true
+    physicsBody = createPhysics()
     for childDir in HexDirection.all() {
       if (childDir != HexDirection.NoAcc) {
         addChild(DirectionArrow(ship: ship, direction: childDir))
@@ -381,27 +383,41 @@ class DirectionArrow: SKSpriteNode{
     let texture = SKTexture(imageNamed: "MovementArrow")
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
     name = "\(direction) arrow for \(ship.name!)"
-    alpha = 1.0
+    alpha = 0.8
 
     self.run(SKAction.rotate(toAngle: CGFloat(direction.rotateAngle()), duration: 0))
     isUserInteractionEnabled = true
     position = findRelativePosition(direction, tiles: ship.tileMap)
+    physicsBody = createPhysics()
   }
 
   required init?(coder aDecoder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
 
-  func hideAcceleration() {
+  func createPhysics() -> SKPhysicsBody {
+    let newPhysicsBody = SKPhysicsBody(circleOfRadius: 10)
+    newPhysicsBody.categoryBitMask = accelerationContactMask
+    newPhysicsBody.contactTestBitMask = planetContactMask
+    newPhysicsBody.collisionBitMask = 0
+    newPhysicsBody.isDynamic = true
+    return newPhysicsBody
+  }
+  
+  func outOfFuel() {
     for child in children {
       child.isHidden = true
     }
   }
   
-  func unhideAcceleration() {
+  func refuelled() {
     for child in children {
       child.isHidden = false
     }
+  }
+  
+  func overPlanet(_ planet: Planet) {
+    print("\(self.name!) overlapping \(planet.name!)")
   }
   
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {

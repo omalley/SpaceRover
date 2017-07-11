@@ -86,19 +86,33 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     print("Ship \(ship.name!) crashed in to \(planet.name!)")
   }
   
+  func shipCollision(ship: SpaceShip, other: SKNode) {
+    if let planet = other as? Planet {
+      shipCrash(ship: ship, planet: planet)
+    } else if let gravity = other as? GravityArrow {
+      ship.enterGravity(gravity)
+    } else {
+      print("contact between ship and ufo \(other.name!)")
+    }
+  }
+  
+  func directionArrowCollision(arrow: DirectionArrow, other: SKNode) {
+    if let planet = other as? Planet {
+      arrow.overPlanet(planet)
+    } else {
+      print("contact between direction arrow \(arrow.name!) and ufo \(other.name!)")
+    }
+  }
+  
   func didBegin(_ contact: SKPhysicsContact) {
     if let ship = contact.bodyA.node as? SpaceShip {
-      if let planet = contact.bodyB.node as? Planet {
-        shipCrash(ship: ship, planet: planet)
-      } else if let gravity = contact.bodyB.node as? GravityArrow {
-        ship.enterGravity(gravity)
-      }
+      shipCollision(ship: ship, other: contact.bodyB.node!)
     } else if let ship = contact.bodyB.node as? SpaceShip {
-      if let planet = contact.bodyA.node as? Planet {
-        shipCrash(ship: ship, planet: planet)
-      } else if let gravity = contact.bodyA.node as? GravityArrow {
-        ship.enterGravity(gravity)
-      }
+      shipCollision(ship: ship, other: contact.bodyA.node!)
+    } else if let acceleration = contact.bodyA.node as? DirectionArrow {
+      directionArrowCollision(arrow: acceleration, other: contact.bodyB.node!)
+    } else if let acceleration = contact.bodyB.node as? DirectionArrow {
+      directionArrowCollision(arrow: acceleration, other: contact.bodyA.node!)
     } else {
       print("contact between \(String(describing: contact.bodyA.node)) and \(String(describing: contact.bodyB.node))")
     }
