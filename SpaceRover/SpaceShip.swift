@@ -11,11 +11,11 @@ import SpriteKit
 struct SlantPoint: Equatable {
   var x: Int
   var y: Int
-  
+
   static func ==(lhs: SlantPoint, rhs: SlantPoint) -> Bool {
     return lhs.x == rhs.x && lhs.y == rhs.y
   }
-  
+
   static func +(lhs: SlantPoint, rhs: SlantPoint) -> SlantPoint {
     return SlantPoint(x: lhs.x + rhs.x, y: lhs.y + rhs.y)
   }
@@ -74,7 +74,7 @@ extension HexDirection {
       return HexDirection(rawValue: newValue + 1)!
     }
   }
-  
+
   func rotateAngle() -> Double {
     switch (self) {
     case .NoAcc:
@@ -93,7 +93,7 @@ extension HexDirection {
       return 1*Double.pi/3
     }
   }
-  
+
   /**
    * Get the SlantPoint vector going in this direction
    */
@@ -122,7 +122,7 @@ func slantToView(_ pos: SlantPoint, tiles: SKTileMapNode) -> CGPoint {
 }
 
 /**
- * Compute the relative position in the given direction.
+ * Compute the relative position of a direction in the view's coordinates.
  */
 func findRelativePosition(_ direction: HexDirection, tiles: SKTileMapNode) -> CGPoint {
   // pick a point that won't cause the relative points to go out of bounds
@@ -144,6 +144,8 @@ protocol ShipInformationWatcher {
   func updateShipInformation(_ msg: String)
 }
 
+let UiFontName = "Copperplate"
+
 class SpaceShip: SKSpriteNode {
 
   let tileMap: SKTileMapNode
@@ -155,7 +157,10 @@ class SpaceShip: SKSpriteNode {
   var direction = HexDirection.NorthEast
   var fuel: Int
   var watcher: ShipInformationWatcher?
-  
+  var inMotion = false
+  var orbitAround: Planet?
+  var hasLanded = false
+
   init (name: String, slant: SlantPoint, tiles: SKTileMapNode) {
     tileMap = tiles
     self.slant = slant
@@ -184,7 +189,7 @@ class SpaceShip: SKSpriteNode {
     watcher = newWatcher
     watcher?.updateShipInformation(getInformation())
   }
-  
+
   func getAccellerationPosition(direction: HexDirection) -> CGPoint {
     let newVelocity = velocity + direction.toSlant()
     let newPosition = slant + newVelocity
@@ -192,8 +197,10 @@ class SpaceShip: SKSpriteNode {
   }
 
   func enterGravity(_ gravity: GravityArrow) {
-    print("\(self.name!) hit \(gravity.name!)")
-    accelerateShip(direction: gravity.direction)
+    if (!hasLanded) {
+      print("\(self.name!) hit \(gravity.name!)")
+      accelerateShip(direction: gravity.direction)
+    }
   }
 
   func accelerateShip(direction: HexDirection) {
@@ -201,20 +208,21 @@ class SpaceShip: SKSpriteNode {
     moveAccArrows()
   }
 
-  func inOrbit() -> Planet? {
+  func calculateOrbit() {
     for body in physicsBody!.allContactedBodies() {
       if let gravity = body.node as? GravityArrow {
         // Is the velocity 60 degrees from the gravity?
         let clockwise = gravity.direction.clockwise(turns: 1).toSlant()
         let counterClockwise = gravity.direction.clockwise(turns: -1).toSlant()
         if velocity == clockwise || velocity == counterClockwise {
-          return gravity.planet
+          orbitAround = gravity.planet
+          return
         }
       }
     }
-    return nil
+    orbitAround = nil
   }
-  
+
   func rotateShip (_ newDirection : HexDirection) {
     if newDirection != direction && newDirection != HexDirection.NoAcc {
       var rotateBy = (newDirection.rotateAngle() - direction.rotateAngle())
@@ -233,62 +241,93 @@ class SpaceShip: SKSpriteNode {
   }
 
   func getInformation() -> String {
-    if let planet = inOrbit() {
-      return "\(name!)\nFuel: \(fuel)\n\(planet.name!) orbit"
+    if let planet = orbitAround {
+      if (hasLanded) {
+        return "\(name!)\nFuel: \(fuel)\nOn \(planet.name!)"
+      } else {
+        return "\(name!)\nFuel: \(fuel)\n\(planet.name!) orbit"
+      }
     } else {
       return "\(name!)\nFuel: \(fuel)"
     }
   }
-  
+
   func useFuel(_ units: Int) {
     fuel -= units
-    watcher?.updateShipInformation(getInformation())
+    calculateOrbit()
     if (fuel == 0) {
       arrows?.outOfFuel()
       //"We're outta rockets sir."
     }
   }
-  
+
   func moveAccArrows(){
     arrows?.removeAllActions()
     arrows?.run(
         SKAction.move(to: getAccellerationPosition(direction: HexDirection.NoAcc), duration: 1))
   }
-  
+
   func move() {
     print("moving \(name!) by \(velocity)")
-    if (velocity.x == 0 && velocity.y == 0){
-      if let list = physicsBody?.allContactedBodies() {
-        for body in list {
-          if let node = body.node as? GravityArrow {
-            accelerateShip(direction: node.direction)
-          }
-        }
-      }
-    } else {
-      slant.x += velocity.x
-      slant.y += velocity.y
+    if !hasLanded {
+      arrows?.removeLandingButtons()
+      inMotion = true
+      slant = slant + velocity
       run(SKAction.move(to: slantToView(slant, tiles: tileMap), duration: 1))
       self.moveAccArrows()
       //vroom vroom
     }
   }
+
+  func finishMovement() {
+    inMotion = false
+    arrows?.detectOverlap()
+    watcher?.updateShipInformation(getInformation())
+  }
+  
+  func landOn(planet: Planet) {
+    print("Land \(name!) on \(planet.name!)")
+    hasLanded = true
+    fuel = fuelCapacity
+    slant = planet.slant
+    position = planet.position
+    velocity = SlantPoint(x: 0, y: 0)
+    arrows?.removeLandingButtons()
+    watcher?.updateShipInformation(getInformation())
+    moveAccArrows()
+    arrows?.setLaunchButtons(planet: planet)
+  }
+
+  func launch(planet: Planet, direction: HexDirection) {
+    print("Launching \(name!) from \(planet.name!)")
+    hasLanded = false
+    orbitAround = nil
+    slant = slant + direction.toSlant()
+    velocity = direction.invert().toSlant()
+    position = slantToView(slant, tiles: tileMap)
+    arrows?.removeLandingButtons()
+    arrows?.position = slantToView(slant + velocity, tiles: tileMap)
+    arrows?.detectOverlap()
+    watcher?.updateShipInformation(getInformation())
+  }
 }
 
 class Planet: SKSpriteNode {
+  var slant: SlantPoint
 
   convenience init(name: String, slant: SlantPoint, tiles: SKTileMapNode) {
     self.init(name:name, image:name, slant:slant, tiles:tiles)
   }
-  
+
   init(name: String, image: String, slant: SlantPoint, tiles: SKTileMapNode) {
     let texture = SKTexture(imageNamed: image)
+    self.slant = slant
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
     let nameLabel = SKLabelNode(text: name)
     nameLabel.zPosition = 1
     nameLabel.position = CGPoint(x: 0, y: 25)
     nameLabel.fontSize = 20
-    nameLabel.fontName = "Copperplate"
+    nameLabel.fontName = UiFontName
     addChild(nameLabel)
     self.name = name
     position = slantToView(slant, tiles: tiles)
@@ -371,12 +410,38 @@ class DirectionKeypad: SKNode {
       }
     }
   }
-  
+
   func refuelled() {
     for child in children {
       if let arrow = child as? DirectionArrow {
         if arrow.direction != .NoAcc {
           arrow.isHidden = false
+        }
+      }
+    }
+  }
+
+  func detectOverlap() {
+    for child in children {
+      if let arrow = child as? DirectionArrow {
+        arrow.detectOverlap()
+      }
+    }
+  }
+
+  func removeLandingButtons() {
+    for child in children {
+      if let button = child as? MovementButton {
+        button.removeSelf()
+      }
+    }
+  }
+
+  func setLaunchButtons(planet: Planet) {
+    for child in children {
+      if let arrow = child as? DirectionArrow {
+        if arrow.direction != .NoAcc {
+          addChild(LaunchButton(arrow: arrow, planet: planet))
         }
       }
     }
@@ -389,7 +454,7 @@ class DirectionKeypad: SKNode {
 class DirectionArrow: SKSpriteNode{
   let direction: HexDirection
   let ship: SpaceShip
-  
+
   /**
    * Constructor for the children arrows
    */
@@ -424,20 +489,101 @@ class DirectionArrow: SKSpriteNode{
     newPhysicsBody.isDynamic = true
     return newPhysicsBody
   }
-  
-  func overPlanet(_ planet: Planet) {
-    print("\(self.name!) overlapping \(planet.name!)")
-  }
-  
+
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
     /* Called when a touch begins */
     for _ in touches {
-      if (direction != HexDirection.NoAcc) {
-        ship.accelerateShip(direction: direction)
-        ship.useFuel(1)
-        ship.rotateShip(direction)
+      if (!ship.inMotion) {
+        if (direction != HexDirection.NoAcc) {
+          ship.accelerateShip(direction: direction)
+          ship.useFuel(1)
+          ship.rotateShip(direction)
+        }
+        ship.move()
       }
-      ship.move()
     }
+  }
+
+  func detectOverlap() {
+    if let dirKeypad = parent as? DirectionKeypad {
+      for body in physicsBody!.allContactedBodies() {
+        if let planet = body.node as? Planet {
+          if ship.orbitAround == planet {
+            dirKeypad.addChild(LandButton(arrow: self, planet: planet))
+          } else {
+            dirKeypad.addChild(CrashButton(arrow: self, planet: planet))
+          }
+        }
+      }
+    }
+  }
+}
+
+class MovementButton: SKLabelNode {
+  let arrow: DirectionArrow
+  let planet: Planet
+  
+  init(msg: String, color: UIColor, arrow: DirectionArrow, planet: Planet) {
+    self.arrow = arrow
+    self.planet = planet
+    super.init()
+    text = msg
+    fontName = UiFontName
+    fontSize = 20
+    fontColor = color
+    position = arrow.position
+    isUserInteractionEnabled = true
+    arrow.isHidden = true
+  }
+  
+  required init?(coder aDecoder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+  
+  func removeSelf() {
+    removeFromParent()
+    arrow.isHidden = false
+  }
+}
+
+class CrashButton: MovementButton {
+  init(arrow: DirectionArrow, planet: Planet) {
+    super.init(msg: "Crash", color: UIColor.red, arrow: arrow, planet: planet)
+  }
+
+  required init?(coder aDecoder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+
+  override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+    arrow.touchesBegan(touches, with: event)
+  }
+}
+
+class LandButton: MovementButton {
+  init(arrow: DirectionArrow, planet: Planet) {
+    super.init(msg: "Land", color: UIColor.green, arrow: arrow, planet: planet)
+  }
+
+  required init?(coder aDecoder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+
+  override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+    arrow.ship.landOn(planet: planet)
+  }
+}
+
+class LaunchButton: MovementButton {
+  init(arrow: DirectionArrow, planet: Planet) {
+    super.init(msg: "Launch", color: UIColor.green, arrow: arrow, planet: planet)
+  }
+
+  required init?(coder aDecoder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+
+  override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+    arrow.ship.launch(planet: planet, direction: arrow.direction)
   }
 }
