@@ -386,6 +386,8 @@ class GravityArrow: SKSpriteNode {
 }
 
 class DirectionKeypad: SKNode {
+  var isOutOfFuel = false
+
   init(ship: SpaceShip) {
     super.init()
     name = "DirectionKeypad for \(ship.name!)"
@@ -402,6 +404,7 @@ class DirectionKeypad: SKNode {
   }
 
   func outOfFuel() {
+    isOutOfFuel = true
     for child in children {
       if let arrow = child as? DirectionArrow {
         if arrow.direction != .NoAcc {
@@ -412,6 +415,7 @@ class DirectionKeypad: SKNode {
   }
 
   func refuelled() {
+    isOutOfFuel = false
     for child in children {
       if let arrow = child as? DirectionArrow {
         if arrow.direction != .NoAcc {
@@ -422,9 +426,11 @@ class DirectionKeypad: SKNode {
   }
 
   func detectOverlap() {
-    for child in children {
-      if let arrow = child as? DirectionArrow {
-        arrow.detectOverlap()
+    if !isOutOfFuel {
+      for child in children {
+        if let arrow = child as? DirectionArrow {
+          arrow.detectOverlap()
+        }
       }
     }
   }
@@ -541,8 +547,12 @@ class MovementButton: SKLabelNode {
   }
   
   func removeSelf() {
-    removeFromParent()
-    arrow.isHidden = false
+    if let pad = parent as? DirectionKeypad {
+      removeFromParent()
+      if !pad.isOutOfFuel {
+        arrow.isHidden = false
+      }
+    }
   }
 }
 
