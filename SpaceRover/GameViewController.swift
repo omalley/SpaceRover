@@ -63,4 +63,10 @@ class GameViewController: UIViewController, ShipInformationWatcher {
   func updateShipInformation(_ msg: String) {
     shipInformation.text = msg
   }
+  func crash(reason: String, ship: SpaceShip) {
+    let alert = UIAlertController(title:"Crash!", message: reason, preferredStyle: .alert)
+    let alertAction = UIAlertAction(title: "Okay", style: .default)
+    alert.addAction(alertAction)
+    self.present(alert, animated: true)
+  }
 }

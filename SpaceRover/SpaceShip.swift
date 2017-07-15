@@ -142,6 +142,7 @@ let accelerationContactMask: UInt32 = 8
 
 protocol ShipInformationWatcher {
   func updateShipInformation(_ msg: String)
+  func crash(reason:String, ship:SpaceShip)
 }
 
 let UiFontName = "Copperplate"
@@ -309,6 +310,15 @@ class SpaceShip: SKSpriteNode {
     arrows?.position = slantToView(slant + velocity, tiles: tileMap)
     arrows?.detectOverlap()
     watcher?.updateShipInformation(getInformation())
+  }
+  
+  func crash(reason:String) {
+    if (!hasLanded) {
+      print(reason)
+      self.isHidden = true
+      arrows?.isHidden = true
+      watcher?.crash(reason: reason, ship: self)
+    }
   }
 }
 

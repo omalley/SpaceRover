@@ -26,7 +26,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   var watcher: ShipInformationWatcher?
 
   override func didMove(to view: SKView) {
-    /* Setup your scene here */2
+    /* Setup your scene here */
     for child in children {
       if child.name == "Tile Map" {
         tileMap = (child as! SKTileMapNode)
@@ -91,7 +91,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   }
 
   func shipCrash(ship: SpaceShip, planet: Planet) {
-    print("Ship \(ship.name!) crashed in to \(planet.name!)")
+    let reason = ("Ship \(ship.name!) crashed in to \(planet.name!)")
+    ship.crash(reason: reason)
   }
 
   func shipCollision(ship: SpaceShip, other: SKNode) {
