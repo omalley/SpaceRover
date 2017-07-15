@@ -26,7 +26,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   var watcher: ShipInformationWatcher?
 
   override func didMove(to view: SKView) {
-    /* Setup your scene here */
+    /* Setup your scene here */2
     for child in children {
       if child.name == "Tile Map" {
         tileMap = (child as! SKTileMapNode)
