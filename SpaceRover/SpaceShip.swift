@@ -275,6 +275,14 @@ class SpaceShip: SKSpriteNode {
       inMotion = true
       slant = slant + velocity
       run(SKAction.move(to: slantToView(slant, tiles: tileMap), duration: 1))
+      // if the player tries to hover over a planet, the gravity needs to pull them again
+      if velocity.x == 0 && velocity.y == 0 {
+        for body in physicsBody!.allContactedBodies() {
+          if let gravity = body.node as? GravityArrow {
+            velocity = gravity.direction.toSlant()
+          }
+        }
+      }
       self.moveAccArrows()
       //vroom vroom
     }
@@ -550,6 +558,10 @@ class MovementButton: SKLabelNode {
     position = arrow.position
     isUserInteractionEnabled = true
     arrow.isHidden = true
+    // Put a shape under the button so that it is easier to push
+    let shape = SKShapeNode(circleOfRadius: 50)
+    shape.alpha = 0.0000001
+    addChild(shape)
   }
   
   required init?(coder aDecoder: NSCoder) {
