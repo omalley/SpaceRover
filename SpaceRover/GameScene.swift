@@ -11,14 +11,90 @@ import SpriteKit
 class GameScene: SKScene, SKPhysicsContactDelegate {
 
   let planets = [
-    "Sol": SlantPoint(x:39, y:23),
-    "Mercury": SlantPoint(x:40, y:20),
-    "Venus": SlantPoint(x:31, y:19),
-    "Earth": SlantPoint(x:51, y:29),
-    "Luna": SlantPoint(x:54, y:30),
-    "Mars": SlantPoint(x:40, y:43),
-    "Jupiter": SlantPoint(x:59, y:59),
-    "Callisto": SlantPoint(x:54, y:59),
+    "Sol": SlantPoint(x:39, y:22),
+    "Mercury": SlantPoint(x:40, y:19),
+    "Venus": SlantPoint(x:31, y:18),
+    "Earth": SlantPoint(x:52, y:28),
+    "Luna": SlantPoint(x:55, y:29),
+    "Mars": SlantPoint(x:40, y:42),
+    "Jupiter": SlantPoint(x:59, y:58),
+    "Callisto": SlantPoint(x:55, y:58),
+  ]
+
+  let asteroids = [
+    SlantPoint(x: 47, y:41),
+    SlantPoint(x: 49, y:41),
+    SlantPoint(x: 46, y:42),
+    SlantPoint(x: 50, y:42),
+    SlantPoint(x: 53, y:42),
+    SlantPoint(x: 55, y:42),
+    SlantPoint(x: 56, y:42),
+    SlantPoint(x: 48, y:43),
+    SlantPoint(x: 50, y:43),
+    SlantPoint(x: 53, y:43),
+    SlantPoint(x: 56, y:43),
+    SlantPoint(x: 59, y:43),
+    SlantPoint(x: 65, y:43),
+    SlantPoint(x: 46, y:44),
+    SlantPoint(x: 50, y:44),
+    SlantPoint(x: 51, y:44),
+    SlantPoint(x: 54, y:44),
+    SlantPoint(x: 57, y:44),
+    SlantPoint(x: 59, y:44),
+    SlantPoint(x: 61, y:44),
+    SlantPoint(x: 65, y:44),
+    SlantPoint(x: 66, y:44),
+    SlantPoint(x: 37, y:45),
+    SlantPoint(x: 48, y:45),
+    SlantPoint(x: 51, y:45),
+    SlantPoint(x: 52, y:45),
+    SlantPoint(x: 53, y:45),
+    SlantPoint(x: 55, y:45),
+    SlantPoint(x: 65, y:45),
+    SlantPoint(x: 68, y:45),
+    SlantPoint(x: 69, y:45),
+    SlantPoint(x: 36, y:46),
+    SlantPoint(x: 37, y:46),
+    SlantPoint(x: 38, y:46),
+    SlantPoint(x: 47, y:46),
+    SlantPoint(x: 49, y:46),
+    SlantPoint(x: 59, y:46),
+    SlantPoint(x: 62, y:46),
+    SlantPoint(x: 67, y:46),
+    SlantPoint(x: 38, y:47),
+    SlantPoint(x: 52, y:47),
+    SlantPoint(x: 55, y:47),
+    SlantPoint(x: 57, y:47),
+    SlantPoint(x: 59, y:47),
+    SlantPoint(x: 60, y:47),
+    SlantPoint(x: 62, y:47),
+    SlantPoint(x: 63, y:47),
+    SlantPoint(x: 65, y:47),
+    SlantPoint(x: 39, y:48),
+    SlantPoint(x: 41, y:48),
+    SlantPoint(x: 42, y:48),
+    SlantPoint(x: 57, y:48),
+    SlantPoint(x: 62, y:48),
+    SlantPoint(x: 64, y:48),
+    SlantPoint(x: 65, y:48),
+    SlantPoint(x: 68, y:48),
+    SlantPoint(x: 68, y:48),
+    SlantPoint(x: 69, y:48),
+    SlantPoint(x: 70, y:48),
+    SlantPoint(x: 43, y:49),
+    SlantPoint(x: 45, y:49),
+    SlantPoint(x: 48, y:49),
+    SlantPoint(x: 60, y:49),
+    SlantPoint(x: 63, y:49),
+    SlantPoint(x: 64, y:49),
+    SlantPoint(x: 67, y:49),
+    SlantPoint(x: 38, y:50),
+    SlantPoint(x: 39, y:50),
+    SlantPoint(x: 41, y:50),
+    SlantPoint(x: 59, y:50),
+    SlantPoint(x: 40, y:51),
+    SlantPoint(x: 39, y:52),
+    SlantPoint(x: 40, y:52),
   ]
 
   var playerShips: [SpaceShip] = []
@@ -39,13 +115,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
       tileMap?.addChild(Planet(name: name, slant: location, tiles: tileMap!))
     }
 
+    // Adding asteroids
+    for location in asteroids {
+      tileMap?.addChild(Asteroid(slant: location, tiles: tileMap!))
+    }
+
     physicsWorld.contactDelegate = self
 
     //Adding Ships
-    let vanguard = SpaceShip(name: "Vanguard II", slant: SlantPoint(x:50, y: 30), tiles: tileMap!)
+    let vanguard = SpaceShip(name: "Vanguard II", slant: SlantPoint(x:51, y: 29), tiles: tileMap!)
     vanguard.setWatcher(watcher)
     playerShips.append(vanguard)
-    let hyperion = SpaceShip(name: "Hyperion", slant: SlantPoint(x:56, y: 30), tiles: tileMap!)
+    let hyperion = SpaceShip(name: "Hyperion", slant: SlantPoint(x:58, y: 29), tiles: tileMap!)
     hyperion.setWatcher(watcher)
     playerShips.append(hyperion)
   }

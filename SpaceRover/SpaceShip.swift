@@ -139,6 +139,7 @@ let shipContactMask: UInt32 = 1
 let planetContactMask: UInt32 = 2
 let gravityContactMask: UInt32 = 4
 let accelerationContactMask: UInt32 = 8
+let asteroidsContactMask: UInt32 = 16
 
 protocol ShipInformationWatcher {
   func updateShipInformation(_ msg: String)
@@ -178,7 +179,7 @@ class SpaceShip: SKSpriteNode {
     zPosition = 20
     physicsBody = SKPhysicsBody(circleOfRadius: 5)
     physicsBody?.categoryBitMask = shipContactMask
-    physicsBody?.contactTestBitMask = planetContactMask | gravityContactMask
+    physicsBody?.contactTestBitMask = planetContactMask | gravityContactMask | asteroidsContactMask
     physicsBody?.collisionBitMask = 0
   }
 
@@ -359,6 +360,28 @@ class Planet: SKSpriteNode {
     physicsBody = SKPhysicsBody(circleOfRadius: 50)
     physicsBody?.categoryBitMask = planetContactMask
     physicsBody?.contactTestBitMask = shipContactMask | accelerationContactMask
+    physicsBody?.collisionBitMask = 0
+    physicsBody?.isDynamic = false
+  }
+
+  required init?(coder aDecoder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+}
+
+class Asteroid: SKSpriteNode {
+
+  static let textures = [SKTexture(imageNamed: "Asteroids1"), SKTexture(imageNamed: "Asteroids2")]
+
+  init(slant: SlantPoint, tiles: SKTileMapNode) {
+    let texture = Asteroid.textures[Int(arc4random_uniform(2))]
+    super.init(texture: texture, color: UIColor.clear, size: texture.size())
+    name = "asteroid at \(slant.x), \(slant.y)"
+    position = slantToView(slant, tiles: tiles)
+    zPosition = 10
+    physicsBody = SKPhysicsBody(circleOfRadius: 55)
+    physicsBody?.categoryBitMask = asteroidsContactMask
+    physicsBody?.contactTestBitMask = shipContactMask
     physicsBody?.collisionBitMask = 0
     physicsBody?.isDynamic = false
   }
