@@ -171,16 +171,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
   }
 
-  func shipCrash(ship: SpaceShip, planet: Planet) {
-    let reason = ("Ship \(ship.name!) crashed in to \(planet.name!)")
-    ship.crash(reason: reason)
-  }
-
   func shipCollision(ship: SpaceShip, other: SKNode) {
     if let planet = other as? Planet {
-      shipCrash(ship: ship, planet: planet)
+      let reason = ("Ship \(ship.name!) crashed in to \(planet.name!)")
+      ship.crash(reason: reason)
     } else if let gravity = other as? GravityArrow {
       ship.enterGravity(gravity)
+    } else if let asteroid = other as? Asteroid {
+      ship.enterAsteroids(asteroid)
     } else {
       print("contact between ship and ufo \(other.name!)")
     }

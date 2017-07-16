@@ -135,6 +135,15 @@ func findRelativePosition(_ direction: HexDirection, tiles: SKTileMapNode) -> CG
   return CGPoint(x: posn.x - origin.x, y: posn.y - origin.y)
 }
 
+/**
+ * Compute the distance from the origin measured in hex widths.
+ */
+func computeDistance(_ point: SlantPoint) -> Double {
+  let y = Double(point.y) * sqrt(3.0) / 2.0
+  let x = Double(point.x) - Double(point.y) / 2.0
+  return hypot(x, y)
+}
+
 let shipContactMask: UInt32 = 1
 let planetContactMask: UInt32 = 2
 let gravityContactMask: UInt32 = 4
@@ -250,7 +259,7 @@ class SpaceShip: SKSpriteNode {
         return "\(name!)\nFuel: \(fuel)\n\(planet.name!) orbit"
       }
     } else {
-      return "\(name!)\nFuel: \(fuel)"
+      return "\(name!)\nFuel: \(fuel)\nSpeed: \(computeDistance(velocity))"
     }
   }
 
@@ -327,6 +336,25 @@ class SpaceShip: SKSpriteNode {
       self.isHidden = true
       arrows?.isHidden = true
       watcher?.crash(reason: reason, ship: self)
+    }
+  }
+
+  func disable(turns: Int) {
+    print("Disabled for \(turns) turns")
+  }
+
+  func enterAsteroids(_ asteroid: Asteroid) {
+    if computeDistance(velocity) > 1 {
+      print("\(name!) entered \(asteroid.name!)")
+      let die = arc4random_uniform(6)
+      switch die {
+      case 4:
+        disable(turns: 1)
+      case 5:
+        disable(turns: 2)
+      default:
+        break
+      }
     }
   }
 }
