@@ -11,14 +11,14 @@ import SpriteKit
 class GameScene: SKScene, SKPhysicsContactDelegate {
 
   let planets = [
-    "Sol": SlantPoint(x:39, y:22),
-    "Mercury": SlantPoint(x:40, y:19),
-    "Venus": SlantPoint(x:31, y:18),
-    "Earth": SlantPoint(x:52, y:28),
-    "Luna": SlantPoint(x:55, y:29),
-    "Mars": SlantPoint(x:40, y:42),
-    "Jupiter": SlantPoint(x:59, y:58),
-    "Callisto": SlantPoint(x:55, y:58),
+    "Sol": (SlantPoint(x:39, y:23), 55),
+    "Mercury": (SlantPoint(x:40, y:20), 15),
+    "Venus": (SlantPoint(x:31, y:19), 25),
+    "Earth": (SlantPoint(x:51, y:29), 25),
+    "Luna": (SlantPoint(x:54, y:30), 10),
+    "Mars": (SlantPoint(x:40, y:43), 20),
+    "Jupiter": (SlantPoint(x:59, y:59), 45),
+    "Callisto": (SlantPoint(x:54, y:59), 10),
   ]
 
   let asteroids = [
@@ -111,8 +111,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     tileMap?.isUserInteractionEnabled = true
 
     //Adding Planets
-    for (name, location) in planets {
-      tileMap?.addChild(Planet(name: name, slant: location, tiles: tileMap!))
+    for (name, (location, radius)) in planets {
+      tileMap?.addChild(Planet(name: name, slant: location, tiles: tileMap!, radius: radius))
     }
 
     // Adding asteroids
@@ -123,10 +123,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     physicsWorld.contactDelegate = self
 
     //Adding Ships
-    let vanguard = SpaceShip(name: "Vanguard II", slant: SlantPoint(x:51, y: 29), tiles: tileMap!)
+    let vanguard = SpaceShip(name: "Vanguard II", slant: SlantPoint(x:51, y: 29), tiles: tileMap!, color:.red)
     vanguard.setWatcher(watcher)
     playerShips.append(vanguard)
-    let hyperion = SpaceShip(name: "Hyperion", slant: SlantPoint(x:58, y: 29), tiles: tileMap!)
+    let hyperion = SpaceShip(name: "Hyperion", slant: SlantPoint(x:58, y: 29), tiles: tileMap!, color:.blue)
     hyperion.setWatcher(watcher)
     playerShips.append(hyperion)
   }

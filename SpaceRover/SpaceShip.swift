@@ -21,6 +21,23 @@ struct SlantPoint: Equatable {
   }
 }
 
+enum SpaceshipColor {
+  case blue,red,green;
+}
+
+extension SpaceshipColor {
+  func image() -> SKTexture {
+    switch (self) {
+    case .blue:
+      return SKTexture(imageNamed: "SpaceshipUpRight")
+    case .red:
+      return SKTexture(imageNamed: "SpaceshipRed")
+    case .green:
+      return SKTexture(imageNamed: "SpaceshipGreen")
+    }
+  }
+}
+
 enum HexDirection: Int {
   case NoAcc, West, NorthWest, NorthEast, East, SouthEast, SouthWest;
 }
@@ -31,6 +48,8 @@ extension HexDirection {
       return HexDirectionGenerator()
     }
   }
+  
+
 
   struct HexDirectionGenerator: IteratorProtocol {
     var currentSection = 0
@@ -171,12 +190,12 @@ class SpaceShip: SKSpriteNode {
   var inMotion = false
   var orbitAround: Planet?
   var hasLanded = false
-
-  init (name: String, slant: SlantPoint, tiles: SKTileMapNode) {
+  
+  init (name: String, slant: SlantPoint, tiles: SKTileMapNode, color: SpaceshipColor) {
     tileMap = tiles
     self.slant = slant
     velocity = SlantPoint(x: 0, y: 0)
-    let texture = SKTexture(imageNamed: "SpaceshipUpRight")
+    let texture = color.image()
     fuel = fuelCapacity
     super.init(texture: texture, color: UIColor.clear, size: texture.size())
     self.name = name
@@ -362,11 +381,11 @@ class SpaceShip: SKSpriteNode {
 class Planet: SKSpriteNode {
   var slant: SlantPoint
 
-  convenience init(name: String, slant: SlantPoint, tiles: SKTileMapNode) {
-    self.init(name:name, image:name, slant:slant, tiles:tiles)
+  convenience init(name: String, slant: SlantPoint, tiles: SKTileMapNode, radius: Int) {
+    self.init(name:name, image:name, slant:slant, tiles:tiles, radius:radius)
   }
 
-  init(name: String, image: String, slant: SlantPoint, tiles: SKTileMapNode) {
+  init(name: String, image: String, slant: SlantPoint, tiles: SKTileMapNode, radius: Int) {
     let texture = SKTexture(imageNamed: image)
     self.slant = slant
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
@@ -385,7 +404,7 @@ class Planet: SKSpriteNode {
         addChild(GravityArrow(direction: direction, planet: self, position: posn))
       }
     }
-    physicsBody = SKPhysicsBody(circleOfRadius: 50)
+    physicsBody = SKPhysicsBody(circleOfRadius: CGFloat(radius))
     physicsBody?.categoryBitMask = planetContactMask
     physicsBody?.contactTestBitMask = shipContactMask | accelerationContactMask
     physicsBody?.collisionBitMask = 0
