@@ -8,9 +8,21 @@
 
 import SpriteKit
 
+class Player {
+  let ship: SpaceShip
+  let info: PlayerInfo
+  var visited: Set<Planet> = Set()
+
+  init(_ description: PlayerInfo, on: Planet) {
+    info = description
+    ship = SpaceShip(name: info.shipName, on: on, tiles: on.parent as! SKTileMapNode,
+                     color: info.color)
+  }
+}
+
 class GameScene: SKScene, SKPhysicsContactDelegate {
 
-  let planets = [
+  let planetLocations = [
     "Sol": (SlantPoint(x:39, y:23), 55),
     "Mercury": (SlantPoint(x:40, y:20), 15),
     "Venus": (SlantPoint(x:31, y:19), 25),
@@ -97,9 +109,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     SlantPoint(x: 40, y:52),
   ]
 
-  var playerShips: [SpaceShip] = []
+  var players: [Player] = []
+  var nextPlayer = 0
   var tileMap:SKTileMapNode?
   var watcher: ShipInformationWatcher?
+  var planets = [String: Planet]()
 
   override func didMove(to view: SKView) {
     /* Setup your scene here */
@@ -111,8 +125,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     tileMap?.isUserInteractionEnabled = true
 
     //Adding Planets
-    for (name, (location, radius)) in planets {
-      tileMap?.addChild(Planet(name: name, slant: location, tiles: tileMap!, radius: radius))
+    for (name, (location, radius)) in planetLocations {
+      let planet = Planet(name: name, slant: location, tiles: tileMap!, radius: radius)
+      tileMap?.addChild(planet)
+      planets[name] = planet
     }
 
     // Adding asteroids
@@ -121,16 +137,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
 
     physicsWorld.contactDelegate = self
-
-    //Adding Ships
-    let vanguard = SpaceShip(name: "Vanguard II", slant: SlantPoint(x:51, y: 29), tiles: tileMap!, color:.red)
-    vanguard.setWatcher(watcher)
-    playerShips.append(vanguard)
-    let hyperion = SpaceShip(name: "Hyperion", slant: SlantPoint(x:58, y: 29), tiles: tileMap!, color:.blue)
-    hyperion.setWatcher(watcher)
-    playerShips.append(hyperion)
   }
 
+  func startGame(watcher: ShipInformationWatcher?, names: [PlayerInfo]) {
+    self.watcher = watcher
+    let earth = planets["Earth"]
+    for name in names {
+      let player = Player(name, on: earth!)
+      player.ship.setWatcher(watcher)
+      players.append(player)
+    }
+    players[nextPlayer].ship.startTurn()
+    watcher?.startTurn(player: players[nextPlayer].info.playerName)
+  }
+  
   let PAN_SLOWDOWN: CGFloat = 20.0
   let MIN_SCALE: CGFloat = 1.5
   let MAX_SCALE: CGFloat = 6.0
@@ -148,14 +168,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
   }
 
-  //sets watcher for ship to recieve info for UI Board
-  func setWatcher(_ newWatcher: ShipInformationWatcher?) {
-    watcher = newWatcher
-    for ship in playerShips {
-      ship.setWatcher(newWatcher)
-    }
-  }
-
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
     /* Called when a touch begins */
     for _ in touches {
@@ -163,10 +175,28 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
   }
 
+  func getNextPlayer() -> Bool {
+    for i in 1 ... players.count {
+      let candidate = (nextPlayer + i) % players.count
+      if !players[candidate].ship.isDead {
+        nextPlayer = candidate
+        return true
+      }
+    }
+    return false
+  }
+
   override func update(_ currentTime: TimeInterval) {
-    for ship in playerShips {
+    if nextPlayer < players.count {
+      let ship = players[nextPlayer].ship
       if ship.inMotion && !ship.arrows!.hasActions() && !ship.hasActions() {
-        ship.finishMovement()
+        ship.endTurn()
+        if getNextPlayer() {
+          watcher?.startTurn(player: players[nextPlayer].info.playerName)
+          players[nextPlayer].ship.startTurn()
+        } else {
+          watcher?.endGame("Everyone died")
+        }
       }
     }
   }

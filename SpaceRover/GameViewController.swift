@@ -11,6 +11,7 @@ import SpriteKit
 
 class GameViewController: UIViewController, ShipInformationWatcher {
   var roverScene: GameScene?
+  var players: [PlayerInfo]?
 
   @IBAction func doPan(_ sender: UIPanGestureRecognizer) {
     roverScene?.doPan(sender.velocity(in: self.view))
@@ -27,8 +28,8 @@ class GameViewController: UIViewController, ShipInformationWatcher {
     let skView = (self.view as! SKView)
 
     if let scene = GameScene(fileNamed:"GameScene") {
-      scene.setWatcher(self)
       roverScene = scene
+
       // Configure the view.
       skView.showsFPS = true
       skView.showsNodeCount = false
@@ -41,6 +42,10 @@ class GameViewController: UIViewController, ShipInformationWatcher {
             
       skView.presentScene(scene)
     }
+  }
+
+  override func viewDidAppear(_ animated: Bool) {
+    roverScene?.startGame(watcher: self, names: players!)
   }
 
   override var shouldAutorotate : Bool {
@@ -66,6 +71,20 @@ class GameViewController: UIViewController, ShipInformationWatcher {
   
   func crash(reason: String, ship: SpaceShip) {
     let alert = UIAlertController(title:"Crash!", message: reason, preferredStyle: .alert)
+    let alertAction = UIAlertAction(title: "Okay", style: .default)
+    alert.addAction(alertAction)
+    self.present(alert, animated: true)
+  }
+
+  func startTurn(player: String) {
+    let alert = UIAlertController(title:"Next Turn", message: player, preferredStyle: .alert)
+    let alertAction = UIAlertAction(title: "Okay", style: .default)
+    alert.addAction(alertAction)
+    self.present(alert, animated: true)
+  }
+
+  func endGame(_ message: String) {
+    let alert = UIAlertController(title:"End Game", message: message, preferredStyle: .alert)
     let alertAction = UIAlertAction(title: "Okay", style: .default)
     alert.addAction(alertAction)
     self.present(alert, animated: true)

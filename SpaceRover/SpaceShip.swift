@@ -172,6 +172,8 @@ let asteroidsContactMask: UInt32 = 16
 protocol ShipInformationWatcher {
   func updateShipInformation(_ msg: String)
   func crash(reason:String, ship:SpaceShip)
+  func startTurn(player: String)
+  func endGame(_ : String)
 }
 
 let UiFontName = "Copperplate"
@@ -190,7 +192,15 @@ class SpaceShip: SKSpriteNode {
   var inMotion = false
   var orbitAround: Planet?
   var hasLanded = false
-  
+  var isDead = false
+
+  convenience init(name: String, on: Planet, tiles: SKTileMapNode, color: SpaceshipColor) {
+    self.init(name: name, slant: on.slant, tiles: tiles, color: color)
+    orbitAround = on
+    hasLanded = true
+    arrows?.setLaunchButtons(planet: on)
+  }
+
   init (name: String, slant: SlantPoint, tiles: SKTileMapNode, color: SpaceshipColor) {
     tileMap = tiles
     self.slant = slant
@@ -203,12 +213,14 @@ class SpaceShip: SKSpriteNode {
     tileMap.addChild(self)
     arrows = DirectionKeypad(ship: self)
     arrows!.position = self.position
+    arrows!.isHidden = true
     tileMap.addChild(arrows!)
     zPosition = 20
     physicsBody = SKPhysicsBody(circleOfRadius: 5)
     physicsBody?.categoryBitMask = shipContactMask
     physicsBody?.contactTestBitMask = planetContactMask | gravityContactMask | asteroidsContactMask
     physicsBody?.collisionBitMask = 0
+    arrows?.detectOverlap()
   }
 
   required init?(coder aDecoder: NSCoder) {
@@ -317,10 +329,17 @@ class SpaceShip: SKSpriteNode {
     }
   }
 
-  func finishMovement() {
+  func startTurn() {
+    print("start turn for \(name!)")
+    arrows?.isHidden = false
+    watcher?.updateShipInformation(getInformation())
+  }
+
+  func endTurn() {
     inMotion = false
     arrows?.detectOverlap()
-    watcher?.updateShipInformation(getInformation())
+    arrows?.isHidden = true
+    print("end turn for \(name!)")
   }
   
   func landOn(planet: Planet) {
@@ -334,6 +353,7 @@ class SpaceShip: SKSpriteNode {
     watcher?.updateShipInformation(getInformation())
     moveAccArrows()
     arrows?.setLaunchButtons(planet: planet)
+    inMotion = true
   }
 
   func launch(planet: Planet, direction: HexDirection) {
@@ -346,13 +366,14 @@ class SpaceShip: SKSpriteNode {
     arrows?.removeLandingButtons()
     arrows?.position = slantToView(slant + velocity, tiles: tileMap)
     arrows?.detectOverlap()
-    watcher?.updateShipInformation(getInformation())
+    inMotion = true
   }
   
   func crash(reason:String) {
     if (!hasLanded) {
       print(reason)
-      self.isHidden = true
+      isDead = true
+      isHidden = true
       arrows?.isHidden = true
       watcher?.crash(reason: reason, ship: self)
     }

@@ -12,7 +12,6 @@
         <!--ScenarioSelection-->
         <scene sceneID="rMO-G5-Egc">
             <objects>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="oZ5-bg-gQ2" userLabel="First Responder" sceneMemberID="firstResponder"/>
                 <viewController id="MJa-36-WFD" userLabel="ScenarioSelection" customClass="ScenarioSelectionController" customModule="SpaceRover" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="vhe-kf-DmH"/>
@@ -27,7 +26,7 @@
                                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                 <state key="normal" title="Start Game"/>
                                 <connections>
-                                    <segue destination="BV1-FR-VrT" kind="show" id="67c-S2-7Zw"/>
+                                    <segue destination="BV1-FR-VrT" kind="show" identifier="startGame" id="67c-S2-7Zw"/>
                                 </connections>
                             </button>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="mVZ-19-8Pt">
@@ -79,6 +78,7 @@
                         <outlet property="playerTable" destination="mVZ-19-8Pt" id="nH3-cl-Pru"/>
                     </connections>
                 </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="oZ5-bg-gQ2" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-681.15942028985512" y="-102.71739130434783"/>
         </scene>
