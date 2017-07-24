@@ -29,10 +29,6 @@ class ScenarioSelectionController: UIViewController, UITableViewDataSource {
     playerTable?.dataSource = self
   }
 
-  @IBAction func changeNumberOfPlayers(_ sender: UIStepper) {
-    print("Players = \(Int(sender.value))")
-  }
-
   var players: [PlayerInfo] = [PlayerInfo(player:"Owen", ship: "Hyperion", color: .blue),
                                PlayerInfo(player:"Hazen", ship: "Vanguard II", color: .red)]
 
@@ -56,5 +52,31 @@ class ScenarioSelectionController: UIViewController, UITableViewDataSource {
     cell.imageView?.image = UIImage(cgImage: image)
 
     return cell
+  }
+
+  @IBAction func addNewPlayer(sender: UIStoryboardSegue) {
+    if let sourceController = sender.source as? PlayerEntryController,
+      let player = sourceController.getPlayerInfo() {
+
+      let newIndexPath = IndexPath(row: players.count, section: 0)
+      players.append(player)
+
+      playerTable.insertRows(at: [newIndexPath], with: .automatic)
+    }
+  }
+
+  func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+
+    if editingStyle == .delete {
+
+      // remove the item from the data model
+      players.remove(at: indexPath.row)
+
+      // delete the table view row
+      tableView.deleteRows(at: [indexPath], with: .fade)
+
+    } else if editingStyle == .insert {
+      // Not used in our example, but if you were adding a new row, this is where you would do it.
+    }
   }
 }

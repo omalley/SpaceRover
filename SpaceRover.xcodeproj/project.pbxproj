@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5A0312A71F25273C004001F6 /* PlayerEntryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0312A61F25273C004001F6 /* PlayerEntryController.swift */; };
 		5A0F034B1F0F2C4E00DD87C7 /* GameKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A0F034A1F0F2C4E00DD87C7 /* GameKit.framework */; };
 		5A29B9831F1BF5CD008FF623 /* ScenarioSelectionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A29B9821F1BF5CD008FF623 /* ScenarioSelectionController.swift */; };
-		5A29B9851F1C7097008FF623 /* PlayerList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A29B9841F1C7097008FF623 /* PlayerList.swift */; };
 		B18473C41EDE5E74000FF428 /* RoverTiles.sks in Resources */ = {isa = PBXBuildFile; fileRef = B18473C31EDE5E74000FF428 /* RoverTiles.sks */; };
 		B18473C61EE4BC51000FF428 /* SpaceShip.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18473C51EE4BC51000FF428 /* SpaceShip.swift */; };
 		B18F99071EDBD6DB001269EA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18F99061EDBD6DB001269EA /* AppDelegate.swift */; };
@@ -41,9 +41,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5A0312A61F25273C004001F6 /* PlayerEntryController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayerEntryController.swift; sourceTree = "<group>"; };
 		5A0F034A1F0F2C4E00DD87C7 /* GameKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameKit.framework; path = System/Library/Frameworks/GameKit.framework; sourceTree = SDKROOT; };
 		5A29B9821F1BF5CD008FF623 /* ScenarioSelectionController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScenarioSelectionController.swift; sourceTree = "<group>"; };
-		5A29B9841F1C7097008FF623 /* PlayerList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayerList.swift; sourceTree = "<group>"; };
 		B18473C31EDE5E74000FF428 /* RoverTiles.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = RoverTiles.sks; sourceTree = "<group>"; };
 		B18473C51EE4BC51000FF428 /* SpaceShip.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpaceShip.swift; sourceTree = "<group>"; };
 		B18F99031EDBD6DB001269EA /* SpaceRover.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpaceRover.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -134,7 +134,7 @@
 				B18473C31EDE5E74000FF428 /* RoverTiles.sks */,
 				B18473C51EE4BC51000FF428 /* SpaceShip.swift */,
 				5A29B9821F1BF5CD008FF623 /* ScenarioSelectionController.swift */,
-				5A29B9841F1C7097008FF623 /* PlayerList.swift */,
+				5A0312A61F25273C004001F6 /* PlayerEntryController.swift */,
 			);
 			path = SpaceRover;
 			sourceTree = "<group>";
@@ -298,11 +298,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5A0312A71F25273C004001F6 /* PlayerEntryController.swift in Sources */,
 				B18F990B1EDBD6DB001269EA /* GameScene.swift in Sources */,
 				5A29B9831F1BF5CD008FF623 /* ScenarioSelectionController.swift in Sources */,
 				B18F990D1EDBD6DB001269EA /* GameViewController.swift in Sources */,
 				B18473C61EE4BC51000FF428 /* SpaceShip.swift in Sources */,
-				5A29B9851F1C7097008FF623 /* PlayerList.swift in Sources */,
 				B18F99071EDBD6DB001269EA /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
