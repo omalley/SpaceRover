@@ -180,6 +180,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
       let candidate = (nextPlayer + i) % players.count
       if !players[candidate].ship.isDead {
         nextPlayer = candidate
+        camera?.run(SKAction.move(to: convert(players[nextPlayer].ship.position , from: tileMap!) , duration: 0.5))
         return true
       }
     }

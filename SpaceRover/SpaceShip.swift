@@ -193,6 +193,7 @@ class SpaceShip: SKSpriteNode {
   var orbitAround: Planet?
   var hasLanded = false
   var isDead = false
+  var turnsDisabled = 0
 
   convenience init(name: String, on: Planet, tiles: SKTileMapNode, color: SpaceshipColor) {
     self.init(name: name, slant: on.slant, tiles: tiles, color: color)
@@ -339,6 +340,12 @@ class SpaceShip: SKSpriteNode {
     inMotion = false
     arrows?.detectOverlap()
     arrows?.isHidden = true
+    if(turnsDisabled > 0) {
+      turnsDisabled -= 1
+    }
+    else if(turnsDisabled == 0) {
+      arrows?.reenable()
+    }
     print("end turn for \(name!)")
   }
   
@@ -381,6 +388,13 @@ class SpaceShip: SKSpriteNode {
 
   func disable(turns: Int) {
     print("Disabled for \(turns) turns")
+    arrows?.outOfFuel()
+    turnsDisabled += turns
+    
+    if(turnsDisabled >= 6)
+    {
+      self.crash(reason: " Your ship,  \(name!), burned up in the Asteroid Fields!")
+    }
   }
 
   func enterAsteroids(_ asteroid: Asteroid) {
@@ -525,6 +539,16 @@ class DirectionKeypad: SKNode {
 
   func refuelled() {
     isOutOfFuel = false
+    for child in children {
+      if let arrow = child as? DirectionArrow {
+        if arrow.direction != .NoAcc {
+          arrow.isHidden = false
+        }
+      }
+    }
+  }
+  
+  func reenable() {
     for child in children {
       if let arrow = child as? DirectionArrow {
         if arrow.direction != .NoAcc {
