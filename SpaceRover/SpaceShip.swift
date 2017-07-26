@@ -178,6 +178,14 @@ protocol ShipInformationWatcher {
 
 let UiFontName = "Copperplate"
 
+/**
+ * Roll a six sided die.
+ * Returns 1 to 6 inclusive
+ */
+func rollDie() -> Int {
+  return 1 + Int(arc4random_uniform(6))
+}
+
 class SpaceShip: SKSpriteNode {
 
   let tileMap: SKTileMapNode
@@ -285,11 +293,13 @@ class SpaceShip: SKSpriteNode {
 
   func getInformation() -> String {
     if let planet = orbitAround {
-      if (hasLanded) {
+      if hasLanded {
         return "\(name!)\nFuel: \(fuel)\nOn \(planet.name!)"
       } else {
         return "\(name!)\nFuel: \(fuel)\n\(planet.name!) orbit"
       }
+    } else if turnsDisabled != 0 {
+      return "\(name!)\nFuel: \(fuel)\nDisabled: \(turnsDisabled)"
     } else {
       return "\(name!)\nFuel: \(fuel)\nSpeed: \(computeDistance(velocity))"
     }
@@ -299,8 +309,8 @@ class SpaceShip: SKSpriteNode {
     fuel -= units
     calculateOrbit()
     if (fuel == 0) {
-      arrows?.outOfFuel()
-      //"We're outta rockets sir."
+      arrows?.disable()
+      //"We're outta gas sir."
     }
   }
 
@@ -338,13 +348,15 @@ class SpaceShip: SKSpriteNode {
 
   func endTurn() {
     inMotion = false
-    arrows?.detectOverlap()
-    arrows?.isHidden = true
-    if(turnsDisabled > 0) {
-      turnsDisabled -= 1
+    if !hasLanded {
+      arrows?.detectOverlap()
     }
-    else if(turnsDisabled == 0) {
-      arrows?.reenable()
+    arrows?.isHidden = true
+    if (turnsDisabled > 0) {
+      turnsDisabled -= 1
+      if(turnsDisabled == 0) {
+        arrows?.reenable()
+      }
     }
     print("end turn for \(name!)")
   }
@@ -388,11 +400,13 @@ class SpaceShip: SKSpriteNode {
 
   func disable(turns: Int) {
     print("Disabled for \(turns) turns")
-    arrows?.outOfFuel()
+    if turnsDisabled == 0 {
+      arrows?.disable()
+      turnsDisabled = 1
+    }
     turnsDisabled += turns
     
-    if(turnsDisabled >= 6)
-    {
+    if(turnsDisabled > 6) {
       self.crash(reason: " Your ship,  \(name!), burned up in the Asteroid Fields!")
     }
   }
@@ -400,11 +414,12 @@ class SpaceShip: SKSpriteNode {
   func enterAsteroids(_ asteroid: Asteroid) {
     if computeDistance(velocity) > 1 {
       print("\(name!) entered \(asteroid.name!)")
-      let die = arc4random_uniform(6)
+      let die = rollDie()
+      print("Rolled a \(die)")
       switch die {
-      case 4:
-        disable(turns: 1)
       case 5:
+        disable(turns: 1)
+      case 6:
         disable(turns: 2)
       default:
         break
@@ -509,7 +524,7 @@ class GravityArrow: SKSpriteNode {
 }
 
 class DirectionKeypad: SKNode {
-  var isOutOfFuel = false
+  var isDisabled = false
 
   init(ship: SpaceShip) {
     super.init()
@@ -526,8 +541,8 @@ class DirectionKeypad: SKNode {
     fatalError("init(coder:) has not been implemented")
   }
 
-  func outOfFuel() {
-    isOutOfFuel = true
+  func disable() {
+    isDisabled = true
     for child in children {
       if let arrow = child as? DirectionArrow {
         if arrow.direction != .NoAcc {
@@ -537,8 +552,8 @@ class DirectionKeypad: SKNode {
     }
   }
 
-  func refuelled() {
-    isOutOfFuel = false
+  func reenable() {
+    isDisabled = false
     for child in children {
       if let arrow = child as? DirectionArrow {
         if arrow.direction != .NoAcc {
@@ -548,18 +563,8 @@ class DirectionKeypad: SKNode {
     }
   }
   
-  func reenable() {
-    for child in children {
-      if let arrow = child as? DirectionArrow {
-        if arrow.direction != .NoAcc {
-          arrow.isHidden = false
-        }
-      }
-    }
-  }
-
   func detectOverlap() {
-    if !isOutOfFuel {
+    if !isDisabled {
       for child in children {
         if let arrow = child as? DirectionArrow {
           arrow.detectOverlap()
@@ -686,7 +691,7 @@ class MovementButton: SKLabelNode {
   func removeSelf() {
     if let pad = parent as? DirectionKeypad {
       removeFromParent()
-      if !pad.isOutOfFuel {
+      if !pad.isDisabled {
         arrow.isHidden = false
       }
     }
