@@ -189,6 +189,7 @@ func rollDie() -> Int {
 class SpaceShip: SKSpriteNode {
 
   let tileMap: SKTileMapNode
+  let player: PlayerInfo
   let fuelCapacity = 20
   var arrows : DirectionKeypad?
 
@@ -203,16 +204,19 @@ class SpaceShip: SKSpriteNode {
   var isDead = false
   var turnsDisabled = 0
 
-  convenience init(name: String, on: Planet, tiles: SKTileMapNode, color: SpaceshipColor) {
-    self.init(name: name, slant: on.slant, tiles: tiles, color: color)
+  convenience init(name: String, on: Planet, tiles: SKTileMapNode, color: SpaceshipColor,
+                   player: PlayerInfo) {
+    self.init(name: name, slant: on.slant, tiles: tiles, color: color, player: player)
     orbitAround = on
     hasLanded = true
     arrows?.setLaunchButtons(planet: on)
   }
 
-  init (name: String, slant: SlantPoint, tiles: SKTileMapNode, color: SpaceshipColor) {
+  init (name: String, slant: SlantPoint, tiles: SKTileMapNode, color: SpaceshipColor,
+        player: PlayerInfo) {
     tileMap = tiles
     self.slant = slant
+    self.player = player
     velocity = SlantPoint(x: 0, y: 0)
     let texture = color.image()
     fuel = fuelCapacity
@@ -428,20 +432,27 @@ class SpaceShip: SKSpriteNode {
   }
 }
 
+enum GravityStrength {
+  case half, full
+}
+
 class Planet: SKSpriteNode {
   var slant: SlantPoint
   let isLandable: Bool
+  let gravity: GravityStrength
 
   convenience init(name: String, slant: SlantPoint, tiles: SKTileMapNode, radius: Int,
-                   landable: Bool) {
-    self.init(name:name, image:name, slant:slant, tiles:tiles, radius:radius, landable: landable)
+                   landable: Bool, gravity: GravityStrength) {
+    self.init(name:name, image:name, slant:slant, tiles:tiles, radius:radius, landable: landable,
+              gravity: gravity)
   }
 
   init(name: String, image: String, slant: SlantPoint, tiles: SKTileMapNode, radius: Int,
-       landable: Bool) {
+       landable: Bool, gravity: GravityStrength) {
     let texture = SKTexture(imageNamed: image)
     self.slant = slant
     isLandable = landable
+    self.gravity = gravity
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
     let nameLabel = SKLabelNode(text: name)
     nameLabel.zPosition = 1

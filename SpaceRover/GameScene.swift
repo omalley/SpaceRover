@@ -16,7 +16,7 @@ class Player {
   init(_ description: PlayerInfo, on: Planet) {
     info = description
     ship = SpaceShip(name: info.shipName, on: on, tiles: on.parent as! SKTileMapNode,
-                     color: info.color)
+                     color: info.color, player: info)
   }
 }
 
@@ -24,14 +24,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
   // the landable property is set for the race scenario
   let planetLocations = [
-    "Sol": (SlantPoint(x:39, y:23), 55, false),
-    "Mercury": (SlantPoint(x:40, y:20), 15, false),
-    "Venus": (SlantPoint(x:31, y:19), 25, true),
-    "Earth": (SlantPoint(x:51, y:29), 25, true),
-    "Luna": (SlantPoint(x:54, y:30), 10, false),
-    "Mars": (SlantPoint(x:40, y:43), 20, true),
-    "Jupiter": (SlantPoint(x:59, y:59), 45, false),
-    "Callisto": (SlantPoint(x:54, y:59), 10, true),
+    "Sol": (SlantPoint(x:39, y:23), 55, false, GravityStrength.full),
+    "Mercury": (SlantPoint(x:40, y:20), 15, false, .full),
+    "Venus": (SlantPoint(x:31, y:19), 25, true, .full),
+    "Earth": (SlantPoint(x:51, y:29), 25, true, .full),
+    "Luna": (SlantPoint(x:54, y:30), 10, false, .half),
+    "Mars": (SlantPoint(x:40, y:43), 20, true, .full),
+    "Jupiter": (SlantPoint(x:59, y:59), 45, false, .full),
+    "Callisto": (SlantPoint(x:54, y:59), 10, true, .full),
   ]
 
   let asteroids = [
@@ -115,6 +115,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   var tileMap:SKTileMapNode?
   var watcher: ShipInformationWatcher?
   var planets = [String: Planet]()
+  var turns = 0
+  var remainingPlanets = [String: Set<Planet>]()
 
   override func didMove(to view: SKView) {
     /* Setup your scene here */
@@ -126,9 +128,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     tileMap?.isUserInteractionEnabled = true
 
     //Adding Planets
-    for (name, (location, radius, isLandable)) in planetLocations {
+    for (name, (location, radius, isLandable, gravity)) in planetLocations {
       let planet = Planet(name: name, slant: location, tiles: tileMap!, radius: radius,
-                          landable: isLandable)
+                          landable: isLandable, gravity: gravity)
       tileMap?.addChild(planet)
       planets[name] = planet
     }
@@ -148,8 +150,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
       let player = Player(name, on: earth!)
       player.ship.setWatcher(watcher)
       players.append(player)
+      remainingPlanets[name.playerName] = Set<Planet>()
+      for (_, planet) in planets {
+        if planet.gravity == GravityStrength.full {
+          remainingPlanets[name.playerName]?.insert(planet)
+        }
+      }
     }
     players[nextPlayer].ship.startTurn()
+    turns = 1
     watcher?.startTurn(player: players[nextPlayer].info.playerName)
   }
   
@@ -181,6 +190,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     for i in 1 ... players.count {
       let candidate = (nextPlayer + i) % players.count
       if !players[candidate].ship.isDead {
+        if candidate <= nextPlayer {
+          turns += 1
+        }
         nextPlayer = candidate
         camera?.run(SKAction.move(to: convert(players[nextPlayer].ship.position , from: tileMap!) , duration: 0.5))
         return true
@@ -194,6 +206,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
       let ship = players[nextPlayer].ship
       if ship.inMotion && !ship.arrows!.hasActions() && !ship.hasActions() {
         ship.endTurn()
+        if remainingPlanets[ship.player.playerName]?.count == 0 {
+          watcher?.endGame("\(ship.player.playerName) has won in \(turns) turns!")
+        }
         if getNextPlayer() {
           watcher?.startTurn(player: players[nextPlayer].info.playerName)
           players[nextPlayer].ship.startTurn()
@@ -204,11 +219,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
   }
 
+  func printRemaining(name: String) {
+    print("\(name):")
+    for planet in remainingPlanets[name]! {
+      print("  \(planet.name!)")
+    }
+  }
+
   func shipCollision(ship: SpaceShip, other: SKNode) {
     if let planet = other as? Planet {
       let reason = ("Ship \(ship.name!) crashed in to \(planet.name!)")
       ship.crash(reason: reason)
     } else if let gravity = other as? GravityArrow {
+      remainingPlanets[ship.player.playerName]?.remove(gravity.planet)
+      printRemaining(name: ship.player.playerName)
       ship.enterGravity(gravity)
     } else if let asteroid = other as? Asteroid {
       ship.enterAsteroids(asteroid)
