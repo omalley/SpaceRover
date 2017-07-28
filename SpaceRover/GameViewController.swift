@@ -77,8 +77,15 @@ class GameViewController: UIViewController, ShipInformationWatcher {
   func crash(reason: String, ship: SpaceShip) {
     playersLeft -= 1
     let alert = UIAlertController(title:"Crash!", message: reason, preferredStyle: .alert)
-    let alertAction = UIAlertAction(title: "Okay", style: .default)
-    alert.addAction(alertAction)
+    if playersLeft == 0 {
+      let alertAction = UIAlertAction(title: "Okay", style: .default,
+                                      handler: {(action: UIAlertAction!) in
+                                        self.dismiss(animated: true, completion: nil)})
+      alert.addAction(alertAction)
+    } else {
+      let alertAction = UIAlertAction(title: "Okay", style: .default)
+      alert.addAction(alertAction)
+    }
     self.present(alert, animated: true)
   }
 
@@ -92,9 +99,6 @@ class GameViewController: UIViewController, ShipInformationWatcher {
   }
 
   func endGame(_ message: String) {
-    let alert = UIAlertController(title:"End Game", message: message, preferredStyle: .alert)
-    let alertAction = UIAlertAction(title: "Okay", style: .default)
-    alert.addAction(alertAction)
-    self.present(alert, animated: true)
+    print("End game: \(message)")
   }
 }
