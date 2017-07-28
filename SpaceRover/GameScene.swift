@@ -22,15 +22,16 @@ class Player {
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
 
+  // the landable property is set for the race scenario
   let planetLocations = [
-    "Sol": (SlantPoint(x:39, y:23), 55),
-    "Mercury": (SlantPoint(x:40, y:20), 15),
-    "Venus": (SlantPoint(x:31, y:19), 25),
-    "Earth": (SlantPoint(x:51, y:29), 25),
-    "Luna": (SlantPoint(x:54, y:30), 10),
-    "Mars": (SlantPoint(x:40, y:43), 20),
-    "Jupiter": (SlantPoint(x:59, y:59), 45),
-    "Callisto": (SlantPoint(x:54, y:59), 10),
+    "Sol": (SlantPoint(x:39, y:23), 55, false),
+    "Mercury": (SlantPoint(x:40, y:20), 15, false),
+    "Venus": (SlantPoint(x:31, y:19), 25, true),
+    "Earth": (SlantPoint(x:51, y:29), 25, true),
+    "Luna": (SlantPoint(x:54, y:30), 10, false),
+    "Mars": (SlantPoint(x:40, y:43), 20, true),
+    "Jupiter": (SlantPoint(x:59, y:59), 45, false),
+    "Callisto": (SlantPoint(x:54, y:59), 10, true),
   ]
 
   let asteroids = [
@@ -125,8 +126,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     tileMap?.isUserInteractionEnabled = true
 
     //Adding Planets
-    for (name, (location, radius)) in planetLocations {
-      let planet = Planet(name: name, slant: location, tiles: tileMap!, radius: radius)
+    for (name, (location, radius, isLandable)) in planetLocations {
+      let planet = Planet(name: name, slant: location, tiles: tileMap!, radius: radius,
+                          landable: isLandable)
       tileMap?.addChild(planet)
       planets[name] = planet
     }

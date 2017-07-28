@@ -430,14 +430,18 @@ class SpaceShip: SKSpriteNode {
 
 class Planet: SKSpriteNode {
   var slant: SlantPoint
+  let isLandable: Bool
 
-  convenience init(name: String, slant: SlantPoint, tiles: SKTileMapNode, radius: Int) {
-    self.init(name:name, image:name, slant:slant, tiles:tiles, radius:radius)
+  convenience init(name: String, slant: SlantPoint, tiles: SKTileMapNode, radius: Int,
+                   landable: Bool) {
+    self.init(name:name, image:name, slant:slant, tiles:tiles, radius:radius, landable: landable)
   }
 
-  init(name: String, image: String, slant: SlantPoint, tiles: SKTileMapNode, radius: Int) {
+  init(name: String, image: String, slant: SlantPoint, tiles: SKTileMapNode, radius: Int,
+       landable: Bool) {
     let texture = SKTexture(imageNamed: image)
     self.slant = slant
+    isLandable = landable
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
     let nameLabel = SKLabelNode(text: name)
     nameLabel.zPosition = 1
@@ -652,7 +656,7 @@ class DirectionArrow: SKSpriteNode{
     if let dirKeypad = parent as? DirectionKeypad {
       for body in physicsBody!.allContactedBodies() {
         if let planet = body.node as? Planet {
-          if ship.orbitAround == planet {
+          if ship.orbitAround == planet && planet.isLandable {
             dirKeypad.addChild(LandButton(arrow: self, planet: planet))
           } else {
             dirKeypad.addChild(CrashButton(arrow: self, planet: planet))
