@@ -173,7 +173,7 @@ protocol ShipInformationWatcher {
   func updateShipInformation(_ msg: String)
   func crash(reason:String, ship:SpaceShip)
   func startTurn(player: String)
-  func endGame(_ : String)
+  func endGame(_ : GameScene)
 }
 
 let UiFontName = "Copperplate"

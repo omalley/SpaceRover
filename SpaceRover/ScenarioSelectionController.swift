@@ -79,4 +79,8 @@ class ScenarioSelectionController: UIViewController, UITableViewDataSource {
       // Not used in our example, but if you were adding a new row, this is where you would do it.
     }
   }
+
+  @IBAction func gameFinished(sender: UIStoryboardSegue) {
+    // we don't really need to do anything here
+  }
 }

@@ -112,10 +112,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
   var players: [Player] = []
   var nextPlayer = 0
+  var livePlayers: Int = 0
   var tileMap:SKTileMapNode?
   var watcher: ShipInformationWatcher?
   var planets = [String: Planet]()
   var turns = 0
+  var isGameOver: Bool = false
+  var winner: PlayerInfo?
+
+  // map from the player's name to the list of planets they still need to reach
   var remainingPlanets = [String: Set<Planet>]()
 
   override func didMove(to view: SKView) {
@@ -157,6 +162,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
       }
     }
+    isGameOver = false
+    livePlayers = players.count
     players[nextPlayer].ship.startTurn()
     turns = 1
     watcher?.startTurn(player: players[nextPlayer].info.playerName)
@@ -187,33 +194,41 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   }
 
   func getNextPlayer() -> Bool {
-    for i in 1 ... players.count {
-      let candidate = (nextPlayer + i) % players.count
-      if !players[candidate].ship.isDead {
-        if candidate <= nextPlayer {
-          turns += 1
+    if !isGameOver {
+      for i in 1 ... players.count {
+        let candidate = (nextPlayer + i) % players.count
+        if !players[candidate].ship.isDead {
+          if candidate <= nextPlayer {
+            turns += 1
+          }
+           nextPlayer = candidate
+          camera?.run(SKAction.move(to: convert(players[nextPlayer].ship.position , from: tileMap!),
+                                    duration: 0.5))
+          print("getNextPlayer = \(nextPlayer)")
+          return true
         }
-        nextPlayer = candidate
-        camera?.run(SKAction.move(to: convert(players[nextPlayer].ship.position , from: tileMap!) , duration: 0.5))
-        return true
       }
     }
+    print("getNextPlayer = false")
     return false
   }
 
   override func update(_ currentTime: TimeInterval) {
-    if nextPlayer < players.count {
+    if !isGameOver && nextPlayer < players.count {
       let ship = players[nextPlayer].ship
       if ship.inMotion && !ship.arrows!.hasActions() && !ship.hasActions() {
         ship.endTurn()
         if remainingPlanets[ship.player.playerName]?.count == 0 {
-          watcher?.endGame("\(ship.player.playerName) has won in \(turns) turns!")
+          isGameOver = true
+          winner = ship.player
+          watcher?.endGame(self)
         }
         if getNextPlayer() {
           watcher?.startTurn(player: players[nextPlayer].info.playerName)
           players[nextPlayer].ship.startTurn()
         } else {
-          watcher?.endGame("Everyone died")
+          isGameOver = true
+          watcher?.endGame(self)
         }
       }
     }
@@ -226,18 +241,35 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
   }
 
-  func shipCollision(ship: SpaceShip, other: SKNode) {
-    if let planet = other as? Planet {
-      let reason = ("Ship \(ship.name!) crashed in to \(planet.name!)")
-      ship.crash(reason: reason)
-    } else if let gravity = other as? GravityArrow {
-      remainingPlanets[ship.player.playerName]?.remove(gravity.planet)
-      printRemaining(name: ship.player.playerName)
-      ship.enterGravity(gravity)
-    } else if let asteroid = other as? Asteroid {
-      ship.enterAsteroids(asteroid)
+  func getGameState() -> String {
+    if let win = winner {
+      return "\(win.playerName) won in \(turns) turns"
+    } else if isGameOver {
+      return "Everyone died."
     } else {
-      print("contact between ship and ufo \(other.name!)")
+      return "In turn \(turns)"
+    }
+  }
+
+  func shipCollision(ship: SpaceShip, other: SKNode) {
+    if ship.inMotion {
+      if let planet = other as? Planet {
+        let reason = ("Ship \(ship.name!) crashed in to \(planet.name!)")
+        print("shipCollision = \(reason)")
+        ship.crash(reason: reason)
+        livePlayers -= 1
+        if livePlayers == 0 {
+          isGameOver = true
+        }
+      } else if let gravity = other as? GravityArrow {
+        remainingPlanets[ship.player.playerName]?.remove(gravity.planet)
+        printRemaining(name: ship.player.playerName)
+        ship.enterGravity(gravity)
+      } else if let asteroid = other as? Asteroid {
+        ship.enterAsteroids(asteroid)
+      } else {
+        print("contact between ship and ufo \(other.name!)")
+      }
     }
   }
 

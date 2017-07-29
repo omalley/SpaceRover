@@ -12,7 +12,6 @@ import SpriteKit
 class GameViewController: UIViewController, ShipInformationWatcher {
   var roverScene: GameScene?
   var players: [PlayerInfo]?
-  var playersLeft = 0
 
   @IBAction func doPan(_ sender: UIPanGestureRecognizer) {
     roverScene?.doPan(sender.velocity(in: self.view))
@@ -49,7 +48,6 @@ class GameViewController: UIViewController, ShipInformationWatcher {
    * Scene is displayed, go ahead and start the game
    */
   override func viewDidAppear(_ animated: Bool) {
-    playersLeft = players!.count
     roverScene?.startGame(watcher: self, names: players!)
   }
 
@@ -75,22 +73,18 @@ class GameViewController: UIViewController, ShipInformationWatcher {
   }
   
   func crash(reason: String, ship: SpaceShip) {
-    playersLeft -= 1
     let alert = UIAlertController(title:"Crash!", message: reason, preferredStyle: .alert)
-    if playersLeft == 0 {
-      let alertAction = UIAlertAction(title: "Okay", style: .default,
-                                      handler: {(action: UIAlertAction!) in
-                                        self.dismiss(animated: true, completion: nil)})
-      alert.addAction(alertAction)
-    } else {
-      let alertAction = UIAlertAction(title: "Okay", style: .default)
-      alert.addAction(alertAction)
-    }
+    let alertAction = UIAlertAction(title: "Okay", style: .default,
+                                    handler: {(action: UIAlertAction!) in
+                                              if self.roverScene!.isGameOver {
+                                                self.endGame(self.roverScene!)
+                                              }})
+    alert.addAction(alertAction)
     self.present(alert, animated: true)
   }
 
   func startTurn(player: String) {
-    if playersLeft > 1 {
+    if !roverScene!.isGameOver {
       let alert = UIAlertController(title:"Next Turn", message: player, preferredStyle: .alert)
       let alertAction = UIAlertAction(title: "Okay", style: .default)
       alert.addAction(alertAction)
@@ -98,7 +92,13 @@ class GameViewController: UIViewController, ShipInformationWatcher {
     }
   }
 
-  func endGame(_ message: String) {
-    print("End game: \(message)")
+  func endGame(_ state: GameScene) {
+    performSegue(withIdentifier: "presentEndGame", sender: state)
+  }
+
+  override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+    if let next = segue.destination as? GameEndController {
+      next.gameState = sender as? GameScene
+    }
   }
 }

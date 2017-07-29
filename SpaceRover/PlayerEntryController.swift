@@ -13,6 +13,11 @@ class PlayerEntryController: UIViewController {
   @IBOutlet weak var shipName: UITextField!
   @IBOutlet weak var shipColor: UISegmentedControl!
 
+  @IBAction func savePlayer(_ sender: UIBarButtonItem) {
+    print("savePlayer = \(String(describing: navigationController))")
+    navigationController?.popViewController(animated: true)
+  }
+
   @IBAction func cancelButton(_ sender: Any) {
     dismiss(animated: true, completion: nil)
   }
