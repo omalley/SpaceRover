@@ -32,6 +32,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     "Mars": (SlantPoint(x:40, y:43), 20, true, .full),
     "Jupiter": (SlantPoint(x:59, y:59), 45, false, .full),
     "Callisto": (SlantPoint(x:54, y:59), 10, true, .full),
+    "Ganymede": (SlantPoint(x:63, y:61), 10, false, .full),
+    "Io": (SlantPoint(x:59, y:57), 10, false, .half)
+
   ]
 
   let asteroids = [
