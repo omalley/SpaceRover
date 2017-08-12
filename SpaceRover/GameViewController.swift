@@ -12,6 +12,7 @@ import SpriteKit
 class GameViewController: UIViewController, ShipInformationWatcher {
   var roverScene: GameScene?
   var players: [PlayerInfo]?
+  var gameDone = false
 
   @IBAction func doPan(_ sender: UIPanGestureRecognizer) {
     roverScene?.doPan(sender.velocity(in: self.view))
@@ -31,7 +32,7 @@ class GameViewController: UIViewController, ShipInformationWatcher {
       roverScene = scene
 
       // Configure the view.
-      skView.showsFPS = true
+      skView.showsFPS = false
       skView.showsNodeCount = false
             
       /* Sprite Kit applies additional optimizations to improve rendering performance */
@@ -48,7 +49,9 @@ class GameViewController: UIViewController, ShipInformationWatcher {
    * Scene is displayed, go ahead and start the game
    */
   override func viewDidAppear(_ animated: Bool) {
-    roverScene?.startGame(watcher: self, names: players!)
+    if !gameDone {
+      roverScene?.startGame(watcher: self, names: players!)
+    }
   }
 
   override var shouldAutorotate : Bool {
@@ -72,8 +75,9 @@ class GameViewController: UIViewController, ShipInformationWatcher {
     shipInformation.text = msg
   }
   
-  func crash(reason: String, ship: SpaceShip) {
-    let alert = UIAlertController(title:"Crash!", message: reason, preferredStyle: .alert)
+  func crash(ship: SpaceShip) {
+    let alert = UIAlertController(title:"Crash!", message: ship.deathReason!,
+                                  preferredStyle: .alert)
     let alertAction = UIAlertAction(title: "Okay", style: .default,
                                     handler: {(action: UIAlertAction!) in
                                               if self.roverScene!.isGameOver {
@@ -84,7 +88,7 @@ class GameViewController: UIViewController, ShipInformationWatcher {
   }
 
   func startTurn(player: String) {
-    if !roverScene!.isGameOver {
+    if !roverScene!.isGameOver && roverScene!.livePlayers > 1 {
       let alert = UIAlertController(title:"Next Turn", message: player, preferredStyle: .alert)
       let alertAction = UIAlertAction(title: "Okay", style: .default)
       alert.addAction(alertAction)
@@ -93,6 +97,7 @@ class GameViewController: UIViewController, ShipInformationWatcher {
   }
 
   func endGame(_ state: GameScene) {
+    gameDone = true
     performSegue(withIdentifier: "presentEndGame", sender: state)
   }
 

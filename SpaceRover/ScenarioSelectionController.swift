@@ -36,6 +36,7 @@ class ScenarioSelectionController: UIViewController, UITableViewDataSource {
     if let game = segue.destination as? GameViewController {
       print("Starting game")
       game.players = players
+      game.gameDone = false
     }
   }
 
@@ -65,7 +66,8 @@ class ScenarioSelectionController: UIViewController, UITableViewDataSource {
     }
   }
 
-  func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+  func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle,
+                 forRowAt indexPath: IndexPath) {
 
     if editingStyle == .delete {
 

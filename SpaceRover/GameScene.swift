@@ -11,7 +11,6 @@ import SpriteKit
 class Player {
   let ship: SpaceShip
   let info: PlayerInfo
-  var visited: Set<Planet> = Set()
 
   init(_ description: PlayerInfo, on: Planet) {
     info = description
@@ -114,13 +113,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   ]
 
   var players: [Player] = []
-  var nextPlayer = 0
+  var nextPlayer: Int = 0
   var livePlayers: Int = 0
   var tileMap:SKTileMapNode?
   var watcher: ShipInformationWatcher?
   var planets = [String: Planet]()
   var turns = 0
-  var isGameOver: Bool = false
+  var isGameOver: Bool = true
   var winner: PlayerInfo?
 
   // map from the player's name to the list of planets they still need to reach
@@ -152,8 +151,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   }
 
   func startGame(watcher: ShipInformationWatcher?, names: [PlayerInfo]) {
+    nextPlayer = 0
     self.watcher = watcher
     let earth = planets["Earth"]
+    players.removeAll()
+    remainingPlanets.removeAll()
     for name in names {
       let player = Player(name, on: earth!)
       player.ship.setWatcher(watcher)
@@ -196,7 +198,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
   }
 
-  func getNextPlayer() -> Bool {
+  func getNextPlayer() {
     if !isGameOver {
       for i in 1 ... players.count {
         let candidate = (nextPlayer + i) % players.count
@@ -204,16 +206,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
           if candidate <= nextPlayer {
             turns += 1
           }
-           nextPlayer = candidate
+          nextPlayer = candidate
           camera?.run(SKAction.move(to: convert(players[nextPlayer].ship.position , from: tileMap!),
                                     duration: 0.5))
-          print("getNextPlayer = \(nextPlayer)")
-          return true
+          watcher?.startTurn(player: players[nextPlayer].info.playerName)
+          players[nextPlayer].ship.startTurn()
+          return
         }
       }
     }
-    print("getNextPlayer = false")
-    return false
   }
 
   override func update(_ currentTime: TimeInterval) {
@@ -222,25 +223,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
       if ship.inMotion && !ship.arrows!.hasActions() && !ship.hasActions() {
         ship.endTurn()
         if remainingPlanets[ship.player.playerName]?.count == 0 {
+          print("\(ship.player.playerName) won")
           isGameOver = true
           winner = ship.player
           watcher?.endGame(self)
-        }
-        if getNextPlayer() {
-          watcher?.startTurn(player: players[nextPlayer].info.playerName)
-          players[nextPlayer].ship.startTurn()
         } else {
-          isGameOver = true
-          watcher?.endGame(self)
+          getNextPlayer()
         }
+      } else if ship.isDead {
+        getNextPlayer()
       }
-    }
-  }
-
-  func printRemaining(name: String) {
-    print("\(name):")
-    for planet in remainingPlanets[name]! {
-      print("  \(planet.name!)")
     }
   }
 
@@ -255,23 +247,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   }
 
   func shipCollision(ship: SpaceShip, other: SKNode) {
-    if ship.inMotion {
+    if ship.inMotion && !ship.hasLanded {
       if let planet = other as? Planet {
-        let reason = ("Ship \(ship.name!) crashed in to \(planet.name!)")
-        print("shipCollision = \(reason)")
-        ship.crash(reason: reason)
-        livePlayers -= 1
-        if livePlayers == 0 {
-          isGameOver = true
-        }
+        ship.crash(reason: "Ship \(ship.name!) crashed in to \(planet.name!)")
       } else if let gravity = other as? GravityArrow {
         remainingPlanets[ship.player.playerName]?.remove(gravity.planet)
-        printRemaining(name: ship.player.playerName)
         ship.enterGravity(gravity)
       } else if let asteroid = other as? Asteroid {
         ship.enterAsteroids(asteroid)
       } else {
         print("contact between ship and ufo \(other.name!)")
+      }
+      if (ship.isDead) {
+        print("Player \(ship.player.playerName) died - \(ship.deathReason!)")
+        livePlayers -= 1
+        if livePlayers == 0 {
+          isGameOver = true
+        }
+        watcher?.crash(ship: ship)
       }
     }
   }

@@ -171,7 +171,7 @@ let asteroidsContactMask: UInt32 = 16
 
 protocol ShipInformationWatcher {
   func updateShipInformation(_ msg: String)
-  func crash(reason:String, ship:SpaceShip)
+  func crash(ship:SpaceShip)
   func startTurn(player: String)
   func endGame(_ : GameScene)
 }
@@ -203,6 +203,7 @@ class SpaceShip: SKSpriteNode {
   var hasLanded = false
   var isDead = false
   var turnsDisabled = 0
+  var deathReason: String?
 
   convenience init(name: String, on: Planet, tiles: SKTileMapNode, color: SpaceshipColor,
                    player: PlayerInfo) {
@@ -392,17 +393,18 @@ class SpaceShip: SKSpriteNode {
     inMotion = true
   }
   
-  func crash(reason:String) {
-    if (!hasLanded) {
-      print(reason)
-      isDead = true
-      isHidden = true
-      arrows?.isHidden = true
-      watcher?.crash(reason: reason, ship: self)
-    }
+  func crash(reason: String) {
+    inMotion = false
+    isDead = true
+    isHidden = true
+    arrows?.isHidden = true
+    deathReason = reason
   }
 
-  func disable(turns: Int) {
+  /**
+   * Disable the ship for a given number of turns.
+   */
+  func disable(turns: Int)  {
     print("Disabled for \(turns) turns")
     if turnsDisabled == 0 {
       arrows?.disable()
@@ -410,9 +412,7 @@ class SpaceShip: SKSpriteNode {
     }
     turnsDisabled += turns
     
-    if(turnsDisabled > 6) {
-      self.crash(reason: " Your ship,  \(name!), burned up in the Asteroid Fields!")
-    }
+    self.crash(reason: " Your ship,  \(name!), burned up in the Asteroid Fields!")
   }
 
   func enterAsteroids(_ asteroid: Asteroid) {
