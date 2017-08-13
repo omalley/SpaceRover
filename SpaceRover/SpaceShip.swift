@@ -21,11 +21,16 @@ struct SlantPoint: Equatable {
   }
 }
 
-enum SpaceshipColor {
-  case blue,red,green;
+enum SpaceshipColor: Int {
+  case blue,red,green,purple,orange,yellow;
 }
 
 extension SpaceshipColor {
+
+  static func count() -> Int {
+    return SpaceshipColor.yellow.rawValue + 1
+  }
+
   func image() -> SKTexture {
     switch (self) {
     case .blue:
@@ -34,6 +39,29 @@ extension SpaceshipColor {
       return SKTexture(imageNamed: "SpaceshipRed")
     case .green:
       return SKTexture(imageNamed: "SpaceshipGreen")
+    case .purple:
+      return SKTexture(imageNamed: "SpaceshipPurple")
+    case .orange:
+      return SKTexture(imageNamed: "SpaceshipOrange")
+    case .yellow:
+      return SKTexture(imageNamed: "SpaceshipYellow")
+    }
+  }
+
+  func toString() -> String {
+    switch self {
+    case .blue:
+      return "Blue"
+    case .red:
+      return "Red"
+    case .green:
+      return "Green"
+    case .purple:
+      return "Purple"
+    case .orange:
+      return "Orange"
+    case .yellow:
+      return "Yellow"
     }
   }
 }

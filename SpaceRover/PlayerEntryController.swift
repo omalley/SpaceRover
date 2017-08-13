@@ -8,10 +8,36 @@
 
 import UIKit
 
-class PlayerEntryController: UIViewController {
+class PlayerEntryController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSource {
   @IBOutlet weak var playerName: UITextField!
   @IBOutlet weak var shipName: UITextField!
-  @IBOutlet weak var shipColor: UISegmentedControl!
+  @IBOutlet weak var shipColor: UIPickerView!
+  var pickedColor: SpaceshipColor = .blue
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    shipColor.dataSource = self
+    shipColor.delegate = self
+  }
+
+  // The number of columns of data
+  func numberOfComponents(in: UIPickerView) -> Int {
+    return 1
+  }
+
+  // The number of rows of data
+  func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+    return SpaceshipColor.count()
+  }
+
+  // The data to return for the row and component (column) that's being passed in
+  func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+    return SpaceshipColor(rawValue: row)?.toString()
+  }
+
+  func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+    pickedColor = SpaceshipColor(rawValue: row)!
+  }
 
   @IBAction func savePlayer(_ sender: UIBarButtonItem) {
     print("savePlayer = \(String(describing: navigationController))")
@@ -23,18 +49,7 @@ class PlayerEntryController: UIViewController {
   }
 
   func getPlayerInfo() -> PlayerInfo? {
-    var color: SpaceshipColor
-    switch (shipColor.selectedSegmentIndex) {
-    case 0:
-      color = .green
-    case 1:
-      color = .blue
-    case 2:
-      color = .red
-    default:
-      color = .green
-    }
     return PlayerInfo(player: playerName.text ?? "Player", ship: shipName.text ?? "Foobar",
-                      color: color)
+                      color: pickedColor)
   }
 }
