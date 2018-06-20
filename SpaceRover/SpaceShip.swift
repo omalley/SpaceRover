@@ -468,19 +468,23 @@ class Planet: SKSpriteNode {
   var slant: SlantPoint
   let isLandable: Bool
   let gravity: GravityStrength
+  let orbiting: String?
+  let orbitDistance: Int?
 
   convenience init(name: String, slant: SlantPoint, tiles: SKTileMapNode, radius: Int,
-                   landable: Bool, gravity: GravityStrength) {
+                   landable: Bool, gravity: GravityStrength, orbiting: String?, orbitDistance: Int) {
     self.init(name:name, image:name, slant:slant, tiles:tiles, radius:radius, landable: landable,
-              gravity: gravity)
+              gravity: gravity, orbiting: orbiting, orbitDistance: orbitDistance)
   }
 
   init(name: String, image: String, slant: SlantPoint, tiles: SKTileMapNode, radius: Int,
-       landable: Bool, gravity: GravityStrength) {
+       landable: Bool, gravity: GravityStrength, orbiting: String?, orbitDistance: Int) {
     let texture = SKTexture(imageNamed: image)
     self.slant = slant
     isLandable = landable
     self.gravity = gravity
+    self.orbiting = orbiting
+    self.orbitDistance = orbitDistance
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
     let nameLabel = SKLabelNode(text: name)
     nameLabel.zPosition = 1

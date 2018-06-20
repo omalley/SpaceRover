@@ -19,20 +19,53 @@ class Player {
   }
 }
 
-class GameScene: SKScene, SKPhysicsContactDelegate {
+struct PlanetInformation {
+  let location: SlantPoint
+  let width: Int
+  let isLandable: Bool
+  let gravity: GravityStrength
+  let orbiting: String?
+  let orbitDistance: Int
+}
 
+class GameScene: SKScene, SKPhysicsContactDelegate {
+  
+  func getRandom(min:Int,max:Int) -> Int {
+    let loc = (Int(arc4random_uniform(UInt32(max)+1))+min);
+    return loc;
+  }
+  
+  func randomizeLocations(){
+    planetLocations.removeAll()
+    for (name,info) in originalPlanetLocations{
+      let numX = getRandom(min: 35, max: 55)
+      let numY = getRandom(min: 35, max: 55)
+      let newPlanetLocations = PlanetInformation(location: SlantPoint(x:numX,y:numY), width:info.width,isLandable:info.isLandable,gravity:info.gravity,orbiting:info.orbiting,orbitDistance:info.orbitDistance)
+      planetLocations[name]=newPlanetLocations
+    }
+  }
+  
+  func setOriginalLocation() {
+    planetLocations.removeAll()
+    for (name,info) in originalPlanetLocations {
+      planetLocations[name] = info
+    }
+  }
+  
+  var planetLocations = [String: PlanetInformation]()
+  
   // the landable property is set for the race scenario
-  let planetLocations = [
-    "Sol": (SlantPoint(x:39, y:23), 55, false, GravityStrength.full),
-    "Mercury": (SlantPoint(x:40, y:20), 15, false, .full),
-    "Venus": (SlantPoint(x:31, y:19), 25, true, .full),
-    "Earth": (SlantPoint(x:51, y:29), 25, true, .full),
-    "Luna": (SlantPoint(x:54, y:30), 10, false, .half),
-    "Mars": (SlantPoint(x:40, y:43), 20, true, .full),
-    "Jupiter": (SlantPoint(x:59, y:59), 45, false, .full),
-    "Callisto": (SlantPoint(x:54, y:59), 10, true, .full),
-    "Ganymede": (SlantPoint(x:63, y:61), 10, false, .full),
-    "Io": (SlantPoint(x:59, y:57), 10, false, .half)
+  let originalPlanetLocations = [
+    "Sol": PlanetInformation(location:SlantPoint(x:39, y:23), width:55, isLandable:false, gravity:.full,orbiting:nil,orbitDistance:0),
+    "Mercury": PlanetInformation(location:SlantPoint(x:40, y:20), width:15, isLandable:false, gravity:.full,orbiting:"Sol",orbitDistance:4),
+    "Venus": PlanetInformation(location:SlantPoint(x:31, y:19), width:25, isLandable:true, gravity:.full,orbiting:"Sol",orbitDistance:8),
+    "Earth": PlanetInformation(location:SlantPoint(x:51, y:29), width:25, isLandable:true, gravity:.full,orbiting:"Sol",orbitDistance:12),
+    "Luna": PlanetInformation(location:SlantPoint(x:54, y:30), width:10, isLandable:false, gravity:.half,orbiting:"Earth",orbitDistance:3),
+    "Mars": PlanetInformation(location:SlantPoint(x:40, y:43), width:20, isLandable:true, gravity:.full,orbiting:"Sol",orbitDistance:21),
+    "Jupiter": PlanetInformation(location:SlantPoint(x:59, y:59), width:45, isLandable:false, gravity:.full,orbiting:"Sol",orbitDistance:0),
+    "Callisto": PlanetInformation(location:SlantPoint(x:54, y:59), width:10, isLandable:true, gravity:.full,orbiting:"Jupiter",orbitDistance:39),
+    "Ganymede": PlanetInformation(location:SlantPoint(x:63, y:61), width:10, isLandable:false, gravity:.full,orbiting:"Jupiter",orbitDistance:0),
+    "Io": PlanetInformation(location:SlantPoint(x:59, y:57), width:10, isLandable:false, gravity:.half,orbiting:"Jupiter",orbitDistance:0)
 
   ]
 
@@ -126,6 +159,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   var remainingPlanets = [String: Set<Planet>]()
 
   override func didMove(to view: SKView) {
+    //RANDOM PLANETS
+    //randomizeLocations()
+    //ORDERED PLANETS
+    setOriginalLocation()
     /* Setup your scene here */
     for child in children {
       if child.name == "Tile Map" {
@@ -135,9 +172,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     tileMap?.isUserInteractionEnabled = true
 
     //Adding Planets
-    for (name, (location, radius, isLandable, gravity)) in planetLocations {
-      let planet = Planet(name: name, slant: location, tiles: tileMap!, radius: radius,
-                          landable: isLandable, gravity: gravity)
+    for (name, info) in planetLocations {
+      let planet = Planet(name: name, slant: info.location, tiles: tileMap!, radius: info.width,
+                          landable: info.isLandable, gravity: info.gravity, orbiting: info.orbiting, orbitDistance: info.orbitDistance)
       tileMap?.addChild(planet)
       planets[name] = planet
     }
