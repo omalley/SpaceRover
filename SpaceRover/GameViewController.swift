@@ -17,7 +17,63 @@ class GameViewController: UIViewController, ShipInformationWatcher {
   @IBAction func doPan(_ sender: UIPanGestureRecognizer) {
     roverScene?.doPan(sender.velocity(in: self.view))
   }
-  
+
+  func viewPlanetMenu() {
+    let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+    if let rover = roverScene {
+      for (name, planet) in rover.planets {
+        if (planet.level <= 1) {
+          alert.addAction(UIAlertAction(title: name, style: .default) {
+            _ in self.roverScene!.moveTo(object: planet)
+          })
+        }
+      }
+    }
+    alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+    present(alert, animated: true)
+  }
+
+  func viewShipMenu() {
+    let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+    if let rover = roverScene {
+      for player in rover.players {
+        alert.addAction(UIAlertAction(title: player.info.shipName, style: .default) {
+            _ in self.roverScene!.moveTo(object: player.ship)
+        })
+      }
+    }
+    alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+    present(alert, animated: true)
+  }
+
+  func selfDestruct(ship: SpaceShip) {
+    ship.crash(reason: "self-destruct")
+    roverScene?.shipDeath(ship: ship)
+  }
+
+  @IBAction func menuButton(_ sender: UIButton) {
+    let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+
+    alert.addAction(UIAlertAction(title: "View planet ...", style: .default) {
+      _ in self.viewPlanetMenu()
+    })
+
+    alert.addAction(UIAlertAction(title: "View ship ...", style: .default) {
+      _ in self.viewShipMenu()
+    })
+
+    alert.addAction(UIAlertAction(title: "Self destruct", style: .default) {
+      _ in
+      if let rover = self.roverScene {
+        self.selfDestruct(ship: rover.players[rover.nextPlayer].ship)
+      }
+    })
+
+    alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+    present(alert, animated: true)
+  }
+
   @IBAction func doPinch(_ sender: UIPinchGestureRecognizer) {
     roverScene?.doPinch(sender.velocity)
   }

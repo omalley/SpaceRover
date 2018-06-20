@@ -466,6 +466,7 @@ enum GravityStrength {
 
 class Planet: SKSpriteNode {
   var slant: SlantPoint
+  let level: Int
   let isLandable: Bool
   let gravity: GravityStrength
   let orbiting: String?

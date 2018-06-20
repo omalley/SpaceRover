@@ -66,7 +66,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     "Callisto": PlanetInformation(location:SlantPoint(x:54, y:59), width:10, isLandable:true, gravity:.full,orbiting:"Jupiter",orbitDistance:39),
     "Ganymede": PlanetInformation(location:SlantPoint(x:63, y:61), width:10, isLandable:false, gravity:.full,orbiting:"Jupiter",orbitDistance:0),
     "Io": PlanetInformation(location:SlantPoint(x:59, y:57), width:10, isLandable:false, gravity:.half,orbiting:"Jupiter",orbitDistance:0)
-
   ]
 
   let asteroids = [
@@ -173,8 +172,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     //Adding Planets
     for (name, info) in planetLocations {
-      let planet = Planet(name: name, slant: info.location, tiles: tileMap!, radius: info.width,
-                          landable: info.isLandable, gravity: info.gravity, orbiting: info.orbiting, orbitDistance: info.orbitDistance)
+      var depth = 0
+      if let parent = orbitting {
+        depth = planets[parent]!.level + 1
+      }
+      let planet = Planet(name: name, slant: info.location, tiles: tileMap!,
+                          radius: info.width, landable: info.isLandable,
+			  gravity: info.gravity, orbiting: info.orbiting,
+			  orbitDistance: info.orbitDistance)
       tileMap?.addChild(planet)
       planets[name] = planet
     }
@@ -235,6 +240,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
   }
 
+  func moveTo(object: SKSpriteNode) {
+    camera?.run(SKAction.move(to: convert(object.position , from: tileMap!),
+                              duration: 0.5))
+  }
+
   func getNextPlayer() {
     if !isGameOver {
       for i in 1 ... players.count {
@@ -283,6 +293,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
   }
 
+  func shipDeath(ship: SpaceShip) {
+    print("Player \(ship.player.playerName) died - \(ship.deathReason!)")
+    livePlayers -= 1
+    if livePlayers == 0 {
+      isGameOver = true
+    }
+    watcher?.crash(ship: ship)
+  }
+
   func shipCollision(ship: SpaceShip, other: SKNode) {
     if ship.inMotion && !ship.hasLanded {
       if let planet = other as? Planet {
@@ -296,12 +315,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         print("contact between ship and ufo \(other.name!)")
       }
       if (ship.isDead) {
-        print("Player \(ship.player.playerName) died - \(ship.deathReason!)")
-        livePlayers -= 1
-        if livePlayers == 0 {
-          isGameOver = true
-        }
-        watcher?.crash(ship: ship)
+        shipDeath(ship: ship)
       }
     }
   }
