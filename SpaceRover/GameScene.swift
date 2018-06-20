@@ -20,7 +20,7 @@ class Player {
 }
 
 struct PlanetInformation {
-  let location: SlantPoint
+  let name: String
   let width: Int
   let isLandable: Bool
   let gravity: GravityStrength
@@ -37,35 +37,51 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   
   func randomizeLocations(){
     planetLocations.removeAll()
-    for (name,info) in originalPlanetLocations{
+    for planetInfo in planetInformation {
       let numX = getRandom(min: 35, max: 55)
       let numY = getRandom(min: 35, max: 55)
-      let newPlanetLocations = PlanetInformation(location: SlantPoint(x:numX,y:numY), width:info.width,isLandable:info.isLandable,gravity:info.gravity,orbiting:info.orbiting,orbitDistance:info.orbitDistance)
-      planetLocations[name]=newPlanetLocations
+      planetLocations[planetInfo.name] = SlantPoint(x:numX, y:numY)
     }
   }
   
   func setOriginalLocation() {
     planetLocations.removeAll()
-    for (name,info) in originalPlanetLocations {
-      planetLocations[name] = info
-    }
+    planetLocations["Sol"] = SlantPoint(x:39, y:23)
+    planetLocations["Mercury"] = SlantPoint(x:40, y:20)
+    planetLocations["Venus"] = SlantPoint(x:31, y:19)
+    planetLocations["Earth"] = SlantPoint(x:51, y:29)
+    planetLocations["Luna"] = SlantPoint(x:54, y:30)
+    planetLocations["Mars"] = SlantPoint(x:40, y:43)
+    planetLocations["Jupiter"] = SlantPoint(x:59, y:59)
+    planetLocations["Callisto"] = SlantPoint(x:54, y:59)
+    planetLocations["Ganymede"] = SlantPoint(x:63, y:61)
+    planetLocations["Io"] = SlantPoint(x:59, y:57)
   }
   
-  var planetLocations = [String: PlanetInformation]()
+  var planetLocations = [String: SlantPoint]()
   
   // the landable property is set for the race scenario
-  let originalPlanetLocations = [
-    "Sol": PlanetInformation(location:SlantPoint(x:39, y:23), width:55, isLandable:false, gravity:.full,orbiting:nil,orbitDistance:0),
-    "Mercury": PlanetInformation(location:SlantPoint(x:40, y:20), width:15, isLandable:false, gravity:.full,orbiting:"Sol",orbitDistance:4),
-    "Venus": PlanetInformation(location:SlantPoint(x:31, y:19), width:25, isLandable:true, gravity:.full,orbiting:"Sol",orbitDistance:8),
-    "Earth": PlanetInformation(location:SlantPoint(x:51, y:29), width:25, isLandable:true, gravity:.full,orbiting:"Sol",orbitDistance:12),
-    "Luna": PlanetInformation(location:SlantPoint(x:54, y:30), width:10, isLandable:false, gravity:.half,orbiting:"Earth",orbitDistance:3),
-    "Mars": PlanetInformation(location:SlantPoint(x:40, y:43), width:20, isLandable:true, gravity:.full,orbiting:"Sol",orbitDistance:21),
-    "Jupiter": PlanetInformation(location:SlantPoint(x:59, y:59), width:45, isLandable:false, gravity:.full,orbiting:"Sol",orbitDistance:0),
-    "Callisto": PlanetInformation(location:SlantPoint(x:54, y:59), width:10, isLandable:true, gravity:.full,orbiting:"Jupiter",orbitDistance:39),
-    "Ganymede": PlanetInformation(location:SlantPoint(x:63, y:61), width:10, isLandable:false, gravity:.full,orbiting:"Jupiter",orbitDistance:0),
-    "Io": PlanetInformation(location:SlantPoint(x:59, y:57), width:10, isLandable:false, gravity:.half,orbiting:"Jupiter",orbitDistance:0)
+  let planetInformation = [
+    PlanetInformation(name: "Sol", width:55, isLandable:false, gravity:.full, orbiting:nil,
+                      orbitDistance:0),
+    PlanetInformation(name: "Mercury", width:15, isLandable:false, gravity:.full, orbiting:"Sol",
+                      orbitDistance:4),
+    PlanetInformation(name: "Venus", width:25, isLandable:true, gravity:.full, orbiting:"Sol",
+                      orbitDistance:8),
+    PlanetInformation(name: "Earth", width:25, isLandable:true, gravity:.full, orbiting:"Sol",
+                      orbitDistance:12),
+    PlanetInformation(name: "Luna", width:10, isLandable:false, gravity:.half, orbiting:"Earth",
+                      orbitDistance:3),
+    PlanetInformation(name: "Mars", width:20, isLandable:true, gravity:.full, orbiting:"Sol",
+                      orbitDistance:21),
+    PlanetInformation(name: "Jupiter", width:45, isLandable:false, gravity:.full, orbiting:"Sol",
+                      orbitDistance:39),
+    PlanetInformation(name: "Callisto", width:10, isLandable:true, gravity:.full,
+                      orbiting:"Jupiter",orbitDistance:5),
+    PlanetInformation(name: "Ganymede", width:10, isLandable:false, gravity:.full,
+                      orbiting:"Jupiter", orbitDistance:4),
+    PlanetInformation(name: "Io", width:10, isLandable:false, gravity:.half, orbiting:"Jupiter",
+                      orbitDistance:2)
   ]
 
   let asteroids = [
@@ -171,17 +187,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     tileMap?.isUserInteractionEnabled = true
 
     //Adding Planets
-    for (name, info) in planetLocations {
+    for planetInfo in planetInformation {
       var depth = 0
-      if let parent = orbitting {
-        depth = planets[parent]!.level + 1
+      var parent: Planet? = nil
+      if let orbit = planetInfo.orbiting {
+        parent = planets[orbit]
+        depth = parent!.level + 1
       }
-      let planet = Planet(name: name, slant: info.location, tiles: tileMap!,
-                          radius: info.width, landable: info.isLandable,
-			  gravity: info.gravity, orbiting: info.orbiting,
-			  orbitDistance: info.orbitDistance)
+      let planet = Planet(name: planetInfo.name, slant: planetLocations[planetInfo.name]!,
+                          tiles: tileMap!,
+                          radius: planetInfo.width, landable: planetInfo.isLandable,
+			                    gravity: planetInfo.gravity, orbiting: parent,
+                          orbitDistance: planetInfo.orbitDistance, level: depth)
       tileMap?.addChild(planet)
-      planets[name] = planet
+      planets[planetInfo.name] = planet
     }
 
     // Adding asteroids
