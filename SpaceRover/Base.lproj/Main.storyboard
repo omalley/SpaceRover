@@ -197,9 +197,11 @@
                                 <state key="normal" title="Menu"/>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="DFM-v0-AfN">
-                                <rect key="frame" x="605" y="8" width="39" height="30"/>
+                                <rect key="frame" x="606" y="11" width="41" height="32"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                                <state key="normal" title="Menu"/>
+                                <state key="normal" title="Menu">
+                                    <color key="titleColor" red="0.22729967540000001" green="1" blue="0.069620852760000004" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                </state>
                                 <connections>
                                     <action selector="menuButton:" destination="BV1-FR-VrT" eventType="touchUpInside" id="Adz-xb-6FC"/>
                                 </connections>
