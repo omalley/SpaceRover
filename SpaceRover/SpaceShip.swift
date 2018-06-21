@@ -439,8 +439,9 @@ class SpaceShip: SKSpriteNode {
       turnsDisabled = 1
     }
     turnsDisabled += turns
-    
-    self.crash(reason: " Your ship,  \(name!), burned up in the Asteroid Fields!")
+    if turnsDisabled >= 6 {
+      self.crash(reason: " Your ship,  \(name!), burned up in the Asteroid Fields!")
+    }
   }
 
   func enterAsteroids(_ asteroid: Asteroid) {
