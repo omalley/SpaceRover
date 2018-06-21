@@ -38,9 +38,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   func randomizeLocations(){
     planetLocations.removeAll()
     for planetInfo in planetInformation {
-      let numX = getRandom(min: 35, max: 55)
-      let numY = getRandom(min: 35, max: 55)
-      planetLocations[planetInfo.name] = SlantPoint(x:numX, y:numY)
+      let theta = getRandom(min: 0, max: 359)
+      let numX = sin(Double(theta)) * Double(planetInfo.orbitDistance)
+      let numY = cos(Double(theta)) * Double(planetInfo.orbitDistance)
+      let spLoc = SlantPoint(x:Int(numX)+39, y:Int(numY)+23)
+      planetLocations[planetInfo.name] = spLoc
     }
   }
   
@@ -81,7 +83,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     PlanetInformation(name: "Ganymede", width:10, isLandable:false, gravity:.full,
                       orbiting:"Jupiter", orbitDistance:4),
     PlanetInformation(name: "Io", width:10, isLandable:false, gravity:.half, orbiting:"Jupiter",
-                      orbitDistance:2)
+                      orbitDistance:3)
   ]
 
   let asteroids = [
@@ -175,9 +177,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
   override func didMove(to view: SKView) {
     //RANDOM PLANETS
-    //randomizeLocations()
+    randomizeLocations()
     //ORDERED PLANETS
-    setOriginalLocation()
+    //setOriginalLocation()
     /* Setup your scene here */
     for child in children {
       if child.name == "Tile Map" {
