@@ -164,8 +164,31 @@ extension HexDirection {
   }
 }
 
+/**
+ * Slantpoint Grid Matrix
+ * (-1,2)(0,2) (1,2) (2,2)
+ *    (-1,1)(0,1) (1,1) (2,1)
+ *       (-1,0)(0,0)  (1,0) (2,0)
+ *          (-1,-1)(0,-1)(1,-1)(2,-1)
+ *             (-1,-2)(0,-2)(1,-2)(2,-2)
+ *
+ * Swift Hex Matrix
+ * (-2,2)(-1,2) (0,2) (1,2)
+ *    (-2,1)(-1,1) (0,1) (1,1)
+ *       (-1,0)(0,0)  (1,0) (2,0)
+ *          (-1,-1)(0,-1)(1,-1)(2,-1)
+ *             (0,-2)(1,-2)(2,-2)(3,-2)
+ *
+ **/
+
 func slantToView(_ pos: SlantPoint, tiles: SKTileMapNode) -> CGPoint {
   return tiles.centerOfTile(atColumn: pos.x - ((pos.y+1) / 2), row: pos.y)
+}
+
+func viewToSlant(_ pos: CGPoint, tiles: SKTileMapNode) -> SlantPoint{
+  let x = tiles.tileColumnIndex(fromPosition: pos)
+  let y = tiles.tileRowIndex(fromPosition: pos)
+  return SlantPoint(x: x + ((y+1) / 2), y: y)
 }
 
 /**

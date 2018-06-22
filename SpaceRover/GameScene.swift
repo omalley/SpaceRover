@@ -41,8 +41,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
       let theta = getRandom(min: 0, max: 359)
       let numX = sin(Double(theta)) * Double(planetInfo.orbitDistance)
       let numY = cos(Double(theta)) * Double(planetInfo.orbitDistance)
-      let spLoc = SlantPoint(x:Int(numX)+39, y:Int(numY)+23)
-      planetLocations[planetInfo.name] = spLoc
+      var spLoc = CGPoint(x: 0, y: 0);
+      if let orbiting = planetInfo.orbiting {
+        let parentLocation = slantToView(planetLocations[orbiting]!, tiles: tileMap!)
+        spLoc = CGPoint(x:CGFloat(numX)+parentLocation.x, y:CGFloat(numY)+parentLocation.y)
+      } else {
+        spLoc = slantToView(SlantPoint(x:39,y:23), tiles: tileMap!)
+      }
+      planetLocations[planetInfo.name] = viewToSlant(spLoc, tiles:tileMap!)
     }
   }
   
@@ -176,10 +182,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   var remainingPlanets = [String: Set<Planet>]()
 
   override func didMove(to view: SKView) {
-    //RANDOM PLANETS
-    randomizeLocations()
-    //ORDERED PLANETS
-    //setOriginalLocation()
     /* Setup your scene here */
     for child in children {
       if child.name == "Tile Map" {
@@ -188,6 +190,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     tileMap?.isUserInteractionEnabled = true
 
+    //RANDOM PLANETS
+    randomizeLocations()
+    //ORDERED PLANETS
+    //setOriginalLocation()
+    
     //Adding Planets
     for planetInfo in planetInformation {
       var depth = 0
