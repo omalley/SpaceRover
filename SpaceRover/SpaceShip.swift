@@ -185,9 +185,12 @@ func slantToView(_ pos: SlantPoint, tiles: SKTileMapNode) -> CGPoint {
   return tiles.centerOfTile(atColumn: pos.x - ((pos.y+1) / 2), row: pos.y)
 }
 
-func viewToSlant(_ pos: CGPoint, tiles: SKTileMapNode) -> SlantPoint{
+func viewToSlant(_ pos: CGPoint, tiles: SKTileMapNode) -> SlantPoint? {
   let x = tiles.tileColumnIndex(fromPosition: pos)
   let y = tiles.tileRowIndex(fromPosition: pos)
+  if (x == UInt.max || y == UInt.max){
+    return nil;
+  }
   return SlantPoint(x: x + ((y+1) / 2), y: y)
 }
 

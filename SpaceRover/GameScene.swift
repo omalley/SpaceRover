@@ -38,17 +38,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   func randomizeLocations(){
     planetLocations.removeAll()
     for planetInfo in planetInformation {
-      let theta = getRandom(min: 0, max: 359)
-      let numX = sin(Double(theta)) * Double(planetInfo.orbitDistance)
-      let numY = cos(Double(theta)) * Double(planetInfo.orbitDistance)
-      var spLoc = CGPoint(x: 0, y: 0);
+      var spLoc : SlantPoint?
       if let orbiting = planetInfo.orbiting {
         let parentLocation = slantToView(planetLocations[orbiting]!, tiles: tileMap!)
-        spLoc = CGPoint(x:CGFloat(numX)+parentLocation.x, y:CGFloat(numY)+parentLocation.y)
+        while (spLoc == nil) {
+          let theta = getRandom(min: 0, max: 359)
+          let numX = sin(Double(theta)) * Double(planetInfo.orbitDistance)
+          let numY = cos(Double(theta)) * Double(planetInfo.orbitDistance)
+          let cg = CGPoint(x:CGFloat(numX)+parentLocation.x, y:CGFloat(numY)+parentLocation.y)
+          spLoc = viewToSlant(cg, tiles: tileMap!)
+        }
       } else {
-        spLoc = slantToView(SlantPoint(x:39,y:23), tiles: tileMap!)
+        spLoc = SlantPoint(x:39,y:23)
       }
-      planetLocations[planetInfo.name] = viewToSlant(spLoc, tiles:tileMap!)
+      planetLocations[planetInfo.name] = spLoc;
     }
   }
   
@@ -64,6 +67,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     planetLocations["Callisto"] = SlantPoint(x:54, y:59)
     planetLocations["Ganymede"] = SlantPoint(x:63, y:61)
     planetLocations["Io"] = SlantPoint(x:59, y:57)
+    // printPlanetDistances()
+  }
+  
+  func printPlanetDistances() {
+    for planet in planetInformation {
+      if let orbits = planet.orbiting {
+        let parentLocation = slantToView(planetLocations[orbits]!, tiles: tileMap!)
+        let ourLocation = slantToView(planetLocations[planet.name]!, tiles: tileMap!)
+        let distance = hypotf(Float(parentLocation.x - ourLocation.x), Float(parentLocation.y - ourLocation.y))
+        print("\(planet.name) = \(distance) ")
+      } else {
+        print("\(planet.name) = 0 ")
+      }
+    }
   }
   
   var planetLocations = [String: SlantPoint]()
@@ -73,23 +90,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     PlanetInformation(name: "Sol", width:55, isLandable:false, gravity:.full, orbiting:nil,
                       orbitDistance:0),
     PlanetInformation(name: "Mercury", width:15, isLandable:false, gravity:.full, orbiting:"Sol",
-                      orbitDistance:4),
+                      orbitDistance:400),
     PlanetInformation(name: "Venus", width:25, isLandable:true, gravity:.full, orbiting:"Sol",
-                      orbitDistance:8),
+                      orbitDistance:768),
     PlanetInformation(name: "Earth", width:25, isLandable:true, gravity:.full, orbiting:"Sol",
-                      orbitDistance:12),
+                      orbitDistance:1152),
     PlanetInformation(name: "Luna", width:10, isLandable:false, gravity:.half, orbiting:"Earth",
-                      orbitDistance:3),
+                      orbitDistance:293),
     PlanetInformation(name: "Mars", width:20, isLandable:true, gravity:.full, orbiting:"Sol",
-                      orbitDistance:21),
+                      orbitDistance:2163),
     PlanetInformation(name: "Jupiter", width:45, isLandable:false, gravity:.full, orbiting:"Sol",
-                      orbitDistance:39),
+                      orbitDistance:3463),
     PlanetInformation(name: "Callisto", width:10, isLandable:true, gravity:.full,
-                      orbiting:"Jupiter",orbitDistance:5),
+                      orbiting:"Jupiter",orbitDistance:554),
     PlanetInformation(name: "Ganymede", width:10, isLandable:false, gravity:.full,
-                      orbiting:"Jupiter", orbitDistance:4),
+                      orbiting:"Jupiter", orbitDistance:384),
     PlanetInformation(name: "Io", width:10, isLandable:false, gravity:.half, orbiting:"Jupiter",
-                      orbitDistance:3)
+                      orbitDistance:222)
   ]
 
   let asteroids = [
@@ -189,11 +206,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
       }
     }
     tileMap?.isUserInteractionEnabled = true
-
-    //RANDOM PLANETS
-    randomizeLocations()
-    //ORDERED PLANETS
-    //setOriginalLocation()
+    
+    let random = true
+    
+    
+    if random {
+      //RANDOM PLANETS
+      randomizeLocations()
+    } else {
+      //ORDERED PLANETS
+      setOriginalLocation()
+    }
     
     //Adding Planets
     for planetInfo in planetInformation {
