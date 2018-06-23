@@ -13,6 +13,7 @@ class GameViewController: UIViewController, ShipInformationWatcher {
   var roverScene: GameScene?
   var players: [PlayerInfo]?
   var gameDone = false
+  var randomMap = false
 
   @IBAction func doPan(_ sender: UIPanGestureRecognizer) {
     roverScene?.doPan(sender.velocity(in: self.view))
@@ -24,7 +25,7 @@ class GameViewController: UIViewController, ShipInformationWatcher {
       for (name, planet) in rover.planets {
         if (planet.level <= 1) {
           alert.addAction(UIAlertAction(title: name, style: .default) {
-            _ in self.roverScene!.moveTo(object: planet)
+            _ in self.roverScene!.moveTo(planet)
           })
         }
       }
@@ -38,7 +39,7 @@ class GameViewController: UIViewController, ShipInformationWatcher {
     if let rover = roverScene {
       for player in rover.players {
         alert.addAction(UIAlertAction(title: player.info.shipName, style: .default) {
-            _ in self.roverScene!.moveTo(object: player.ship)
+            _ in self.roverScene!.moveTo(player.ship)
         })
       }
     }
@@ -90,6 +91,7 @@ class GameViewController: UIViewController, ShipInformationWatcher {
 
     if let scene = GameScene(fileNamed:"GameScene") {
       roverScene = scene
+      roverScene?.randomMap = randomMap
 
       // Configure the view.
       skView.showsFPS = false

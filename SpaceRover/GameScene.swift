@@ -194,6 +194,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   var turns = 0
   var isGameOver: Bool = true
   var winner: PlayerInfo?
+  var randomMap = false
 
   // map from the player's name to the list of planets they still need to reach
   var remainingPlanets = [String: Set<Planet>]()
@@ -207,10 +208,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     tileMap?.isUserInteractionEnabled = true
     
-    let random = true
-    
-    
-    if random {
+    if randomMap {
       //RANDOM PLANETS
       randomizeLocations()
     } else {
@@ -239,7 +237,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     for location in asteroids {
       tileMap?.addChild(Asteroid(slant: location, tiles: tileMap!))
     }
-
+    moveTo(planets["Earth"]!)
     physicsWorld.contactDelegate = self
   }
 
@@ -291,7 +289,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
   }
 
-  func moveTo(object: SKSpriteNode) {
+  func moveTo(_ object: SKSpriteNode) {
     camera?.run(SKAction.move(to: convert(object.position , from: tileMap!),
                               duration: 0.5))
   }

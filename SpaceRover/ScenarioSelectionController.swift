@@ -22,6 +22,7 @@ class PlayerInfo {
 
 class ScenarioSelectionController: UIViewController, UITableViewDataSource {
 
+  @IBOutlet weak var randomMapSwitch: UISwitch!
   @IBOutlet weak var playerTable: UITableView!
 
   override func viewDidLoad() {
@@ -37,6 +38,7 @@ class ScenarioSelectionController: UIViewController, UITableViewDataSource {
       print("Starting game")
       game.players = players
       game.gameDone = false
+      game.randomMap = randomMapSwitch.isOn
     }
   }
 
