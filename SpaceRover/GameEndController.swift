@@ -25,7 +25,7 @@ class GameEndController: UIViewController, UITableViewDataSource {
   }
 
   @IBAction func done(_ sender: UIButton) {
-    self.navigationController?.popToRootViewController(animated: true)
+    dismiss(animated: true, completion: nil)
   }
 
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {

@@ -62,6 +62,10 @@ class GameViewController: UIViewController, ShipInformationWatcher {
       _ in self.viewShipMenu()
     })
 
+    alert.addAction(UIAlertAction(title: "Game Status", style: .default) {
+      _ in self.performSegue(withIdentifier: "presentGameStatus", sender: self)
+    })
+
     alert.addAction(UIAlertAction(title: "Self destruct", style: .default) {
       _ in
       if let rover = self.roverScene {
@@ -154,12 +158,12 @@ class GameViewController: UIViewController, ShipInformationWatcher {
 
   func endGame(_ state: GameScene) {
     gameDone = true
-    performSegue(withIdentifier: "presentEndGame", sender: state)
+    performSegue(withIdentifier: "presentEndGame", sender: self)
   }
 
   override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
     if let next = segue.destination as? GameEndController {
-      next.gameState = sender as? GameScene
+      next.gameState = roverScene
     }
   }
 }

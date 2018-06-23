@@ -1,17 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13529" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="bXp-id-o9P">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14113" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="bXp-id-o9P">
     <device id="retina4_7" orientation="landscape">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13527"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14088"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
-    <customFonts key="customFonts">
-        <array key="Copperplate.ttc">
-            <string>Copperplate</string>
-        </array>
-    </customFonts>
     <scenes>
         <!--ScenarioSelection-->
         <scene sceneID="rMO-G5-Egc">
@@ -217,6 +212,7 @@
                     <connections>
                         <outlet property="shipInformation" destination="uI1-ff-3uQ" id="FJo-gf-KwK"/>
                         <segue destination="zbm-q4-9bn" kind="presentation" identifier="presentEndGame" id="cNl-mB-3Db"/>
+                        <segue destination="fUj-fV-WE9" kind="show" identifier="presentGameStatus" id="iDJ-6n-c9y"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="SZV-WD-TEh" sceneMemberID="firstResponder"/>
@@ -231,7 +227,7 @@
                     </connections>
                 </pinchGestureRecognizer>
             </objects>
-            <point key="canvasLocation" x="1023.1884057971015" y="119.0217391304348"/>
+            <point key="canvasLocation" x="1021" y="191"/>
         </scene>
         <!--GameEnd-->
         <scene sceneID="xLu-bX-RLF">
@@ -302,7 +298,7 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="kl0-d4-649" userLabel="First Responder" sceneMemberID="firstResponder"/>
                 <exit id="Byr-B2-KTS" userLabel="Exit" sceneMemberID="exit"/>
             </objects>
-            <point key="canvasLocation" x="1915.9420289855075" y="330.97826086956525"/>
+            <point key="canvasLocation" x="1916" y="574"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="SBA-mD-K0D">
@@ -321,6 +317,76 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="26A-DF-Zfs" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-681.15942028985512" y="-102.71739130434783"/>
+        </scene>
+        <!--GameStatus-->
+        <scene sceneID="fwV-mm-C5W">
+            <objects>
+                <viewController storyboardIdentifier="GameStatus" title="GameEnd" id="fUj-fV-WE9" userLabel="GameStatus" customClass="GameEndController" customModule="SpaceRover" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="XGz-uS-jrC"/>
+                        <viewControllerLayoutGuide type="bottom" id="KgJ-zD-MnB"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="P4h-l0-AZe">
+                        <rect key="frame" x="0.0" y="0.0" width="667" height="375"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ahg-Rx-JjR">
+                                <rect key="frame" x="189" y="325" width="37" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinY="YES"/>
+                                <state key="normal" title="Done"/>
+                                <connections>
+                                    <action selector="done:" destination="fUj-fV-WE9" eventType="touchUpInside" id="c6b-yg-UHo"/>
+                                </connections>
+                            </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Game State" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="69N-Gt-BpE" userLabel="GameStatus">
+                                <rect key="frame" x="102" y="28" width="211" height="21"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxY="YES"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" restorationIdentifier="PlayerDetail" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="GqZ-mQ-485" userLabel="PlayerDetail">
+                                <rect key="frame" x="20" y="70" width="627" height="221"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <prototypes>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="gameEndPlayerInfo" textLabel="Ij6-ag-qQp" detailTextLabel="Hga-w8-iu6" style="IBUITableViewCellStyleValue1" id="Uhh-aK-bvh">
+                                        <rect key="frame" x="0.0" y="28" width="627" height="44"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="Uhh-aK-bvh" id="f54-h5-dxi">
+                                            <rect key="frame" x="0.0" y="0.0" width="627" height="43.5"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" text="Title" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="Ij6-ag-qQp">
+                                                    <rect key="frame" x="15" y="12" width="33.5" height="20.5"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" text="Detail" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="Hga-w8-iu6">
+                                                    <rect key="frame" x="568" y="12" width="44" height="20.5"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                            </subviews>
+                                        </tableViewCellContentView>
+                                    </tableViewCell>
+                                </prototypes>
+                            </tableView>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                    <connections>
+                        <outlet property="playerTable" destination="GqZ-mQ-485" id="lUX-1W-FwJ"/>
+                        <outlet property="winnerLabel" destination="69N-Gt-BpE" id="mmd-Qd-7a8"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="yjM-x5-1pN" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1915.5922038980511" y="-151.19999999999999"/>
         </scene>
     </scenes>
     <resources>
