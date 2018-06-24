@@ -9,10 +9,15 @@
 import UIKit
 import SpriteKit
 
+enum GameState {
+  case NOT_STARTED, IN_PROGRESS, FINISHED
+}
+
 class GameViewController: UIViewController, ShipInformationWatcher {
+
   var roverScene: GameScene?
   var players: [PlayerInfo]?
-  var gameDone = false
+  var state = GameState.NOT_STARTED
   var randomMap = false
 
   @IBAction func doPan(_ sender: UIPanGestureRecognizer) {
@@ -49,7 +54,6 @@ class GameViewController: UIViewController, ShipInformationWatcher {
 
   func selfDestruct(ship: SpaceShip) {
     ship.crash(reason: "self-destruct")
-    roverScene?.shipDeath(ship: ship)
   }
 
   @IBAction func menuButton(_ sender: UIButton) {
@@ -111,8 +115,9 @@ class GameViewController: UIViewController, ShipInformationWatcher {
    * Scene is displayed, go ahead and start the game
    */
   override func viewDidAppear(_ animated: Bool) {
-    if !gameDone {
+    if state == GameState.NOT_STARTED {
       roverScene?.startGame(watcher: self, names: players!)
+      state = GameState.IN_PROGRESS
     }
   }
 
@@ -138,11 +143,12 @@ class GameViewController: UIViewController, ShipInformationWatcher {
   }
   
   func crash(ship: SpaceShip) {
+    roverScene?.shipDeath(ship: ship)
     let alert = UIAlertController(title:"Crash!", message: ship.deathReason!,
                                   preferredStyle: .alert)
     let alertAction = UIAlertAction(title: "Okay", style: .default,
                                     handler: {(action: UIAlertAction!) in
-                                              if self.roverScene!.isGameOver {
+                                              if self.roverScene!.turnState == TurnState.GAME_OVER {
                                                 self.endGame(self.roverScene!)
                                               }})
     alert.addAction(alertAction)
@@ -150,16 +156,19 @@ class GameViewController: UIViewController, ShipInformationWatcher {
   }
 
   func startTurn(player: String) {
-    if !roverScene!.isGameOver && roverScene!.livePlayers > 1 {
-      let alert = UIAlertController(title:"Next Turn", message: player, preferredStyle: .alert)
-      let alertAction = UIAlertAction(title: "Okay", style: .default)
-      alert.addAction(alertAction)
-      self.present(alert, animated: true)
+    if roverScene!.turnState == TurnState.TURN_DONE {
+      if roverScene!.livePlayers > 1 {
+        let alert = UIAlertController(title:"Next Turn", message: player, preferredStyle: .alert)
+        let alertAction = UIAlertAction(title: "Okay", style: .default)
+        alert.addAction(alertAction)
+        self.present(alert, animated: true)
+      }
+      roverScene!.turnState = TurnState.WAITING_FOR_DIRECTION
     }
   }
 
-  func endGame(_ state: GameScene) {
-    gameDone = true
+  func endGame(_ param: GameScene) {
+    state = GameState.FINISHED
     performSegue(withIdentifier: "presentEndGame", sender: self)
   }
 
@@ -167,5 +176,18 @@ class GameViewController: UIViewController, ShipInformationWatcher {
     if let next = segue.destination as? GameEndController {
       next.gameState = roverScene
     }
+  }
+
+
+  func shipMoving(ship: SpaceShip) {
+    roverScene?.turnState = TurnState.MOVING
+  }
+
+  func shipDoneMoving(ship: SpaceShip) {
+    roverScene?.turnState = TurnState.TURN_DONE
+  }
+
+  func getTurnState() -> TurnState {
+    return roverScene!.turnState
   }
 }

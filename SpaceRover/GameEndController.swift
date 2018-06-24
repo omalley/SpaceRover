@@ -13,7 +13,6 @@ class GameEndController: UIViewController, UITableViewDataSource {
   @IBOutlet weak var winnerLabel: UILabel!
   @IBOutlet weak var playerTable: UITableView!
 
-
   var gameState: GameScene?
 
   /**

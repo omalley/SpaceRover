@@ -37,8 +37,8 @@ class ScenarioSelectionController: UIViewController, UITableViewDataSource {
     if let game = segue.destination as? GameViewController {
       print("Starting game")
       game.players = players
-      game.gameDone = false
       game.randomMap = randomMapSwitch.isOn
+      game.state = GameState.NOT_STARTED
     }
   }
 

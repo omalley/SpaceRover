@@ -224,9 +224,12 @@ let accelerationContactMask: UInt32 = 8
 let asteroidsContactMask: UInt32 = 16
 
 protocol ShipInformationWatcher {
+  func getTurnState() -> TurnState
   func updateShipInformation(_ msg: String)
   func crash(ship:SpaceShip)
   func startTurn(player: String)
+  func shipMoving(ship: SpaceShip)
+  func shipDoneMoving(ship: SpaceShip)
   func endGame(_ : GameScene)
 }
 
@@ -252,7 +255,6 @@ class SpaceShip: SKSpriteNode {
   var direction = HexDirection.NorthEast
   var fuel: Int
   var watcher: ShipInformationWatcher?
-  var inMotion = false
   var orbitAround: Planet?
   var hasLanded = false
   var isDead = false
@@ -383,7 +385,7 @@ class SpaceShip: SKSpriteNode {
     print("moving \(name!) by \(velocity)")
     if !hasLanded {
       arrows?.removeLandingButtons()
-      inMotion = true
+      watcher?.shipMoving(ship: self)
       slant = slant + velocity
       run(SKAction.move(to: slantToView(slant, tiles: tileMap), duration: 1))
       // if the player tries to hover over a planet, the gravity needs to pull them again
@@ -406,7 +408,7 @@ class SpaceShip: SKSpriteNode {
   }
 
   func endTurn() {
-    inMotion = false
+    watcher?.shipDoneMoving(ship: self)
     if !hasLanded {
       arrows?.detectOverlap()
     }
@@ -431,7 +433,7 @@ class SpaceShip: SKSpriteNode {
     watcher?.updateShipInformation(getInformation())
     moveAccArrows()
     arrows?.setLaunchButtons(planet: planet)
-    inMotion = true
+    watcher?.shipMoving(ship: self)
   }
 
   func launch(planet: Planet, direction: HexDirection) {
@@ -444,15 +446,15 @@ class SpaceShip: SKSpriteNode {
     arrows?.removeLandingButtons()
     arrows?.position = slantToView(slant + velocity, tiles: tileMap)
     arrows?.detectOverlap()
-    inMotion = true
+    watcher?.shipMoving(ship: self)
   }
   
   func crash(reason: String) {
-    inMotion = false
     isDead = true
     isHidden = true
     arrows?.isHidden = true
     deathReason = reason
+    watcher?.crash(ship: self)
   }
 
   /**
@@ -715,7 +717,7 @@ class DirectionArrow: SKSpriteNode{
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
     /* Called when a touch begins */
     for _ in touches {
-      if (!ship.inMotion) {
+      if (ship.watcher!.getTurnState() == TurnState.WAITING_FOR_DIRECTION) {
         if (direction != HexDirection.NoAcc) {
           ship.accelerateShip(direction: direction)
           ship.useFuel(1)
