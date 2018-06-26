@@ -87,7 +87,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     planetLocations["Callisto"] = SlantPoint(x:54, y:59)
     planetLocations["Ganymede"] = SlantPoint(x:63, y:61)
     planetLocations["Io"] = SlantPoint(x:59, y:57)
-    // printPlanetDistances()
+    planetLocations["Ceres"] = SlantPoint(x:47, y:50)
+    printPlanetDistances()
   }
   
   func printPlanetDistances() {
@@ -124,7 +125,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     PlanetInformation(name: "Ganymede", width:10, isLandable:false, gravity:.full,
                       orbiting:"Jupiter", orbitDistance:384),
     PlanetInformation(name: "Io", width:10, isLandable:false, gravity:.half, orbiting:"Jupiter",
-                      orbitDistance:222)
+                      orbitDistance:222),
+    PlanetInformation(name: "Ceres", width:12, isLandable:false, gravity:.half, orbiting:"Sol",
+                      orbitDistance:2663)
   ]
 
   let asteroids = [
