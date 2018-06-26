@@ -50,7 +50,7 @@ class Planet: SKSpriteNode {
     for direction in HexDirection.all() {
       if direction != HexDirection.NoAcc {
         let posn = findRelativePosition(direction.invert(), tiles: tiles)
-        addChild(GravityArrow(direction: direction, planet: self, position: posn))
+        addChild(GravityArrow(direction: direction, planet: self, position: posn, strength: gravity))
       }
     }
     physicsBody = SKPhysicsBody(circleOfRadius: CGFloat(radius))
@@ -90,11 +90,21 @@ class Asteroid: SKSpriteNode {
 class GravityArrow: SKSpriteNode {
   let direction: HexDirection
   let planet: Planet
+  let strength: GravityStrength
 
-  init(direction: HexDirection, planet: Planet, position: CGPoint) {
+  init(direction: HexDirection, planet: Planet, position: CGPoint, strength: GravityStrength) {
     self.direction = direction
     self.planet = planet
-    let texture = SKTexture(imageNamed: "GravityArrow")
+    self.strength = strength
+    var textureName : String?;
+    switch strength {
+    case .full:
+      textureName = "GravityArrow"
+    case .half:
+      textureName = "HalfGravityArrow"
+    }
+    let texture = SKTexture(imageNamed: textureName!)
+
     // Create the hexagon with the additional wedge toward the planet
     let bodyShape = CGMutablePath()
     bodyShape.addLines(between: [CGPoint(x:111, y:0),
