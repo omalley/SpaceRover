@@ -9,7 +9,7 @@
 import SpriteKit
 
 enum GravityStrength {
-  case half, full
+  case none, half, full
 }
 
 class Planet: SKSpriteNode {
@@ -47,10 +47,13 @@ class Planet: SKSpriteNode {
     self.name = name
     position = slantToView(slant, tiles: tiles)
     zPosition = 10
-    for direction in HexDirection.all() {
-      if direction != HexDirection.NoAcc {
-        let posn = findRelativePosition(direction.invert(), tiles: tiles)
-        addChild(GravityArrow(direction: direction, planet: self, position: posn, strength: gravity))
+    if gravity != GravityStrength.none {
+      for direction in HexDirection.all() {
+        if direction != HexDirection.NoAcc {
+          let posn = findRelativePosition(direction.invert(), tiles: tiles)
+          addChild(GravityArrow(direction: direction, planet: self, position: posn,
+                                strength: gravity))
+        }
       }
     }
     physicsBody = SKPhysicsBody(circleOfRadius: CGFloat(radius))
@@ -98,6 +101,8 @@ class GravityArrow: SKSpriteNode {
     self.strength = strength
     var textureName : String?;
     switch strength {
+    case .none:
+      break
     case .full:
       textureName = "GravityArrow"
     case .half:

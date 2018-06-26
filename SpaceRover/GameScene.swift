@@ -126,7 +126,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                       orbiting:"Jupiter", orbitDistance:384),
     PlanetInformation(name: "Io", width:10, isLandable:false, gravity:.half, orbiting:"Jupiter",
                       orbitDistance:222),
-    PlanetInformation(name: "Ceres", width:12, isLandable:false, gravity:.half, orbiting:"Sol",
+    PlanetInformation(name: "Ceres", width:12, isLandable:false, gravity:.none, orbiting:"Sol",
                       orbitDistance:2663)
   ]
 
