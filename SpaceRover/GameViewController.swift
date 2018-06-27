@@ -43,9 +43,11 @@ class GameViewController: UIViewController, ShipInformationWatcher {
     let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
     if let rover = roverScene {
       for player in rover.players {
-        alert.addAction(UIAlertAction(title: player.info.shipName, style: .default) {
+        if !player.ship.isDead{
+          alert.addAction(UIAlertAction(title: player.info.shipName, style: .default) {
             _ in self.roverScene!.moveTo(player.ship)
-        })
+          })
+        }
       }
     }
     alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
