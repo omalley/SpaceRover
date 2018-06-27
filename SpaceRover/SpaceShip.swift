@@ -84,6 +84,7 @@ class SpaceShip: SKSpriteNode {
   let tileMap: SKTileMapNode
   let player: PlayerInfo
   let fuelCapacity = 20
+  let turnIndicator: SKSpriteNode
   var arrows : DirectionKeypad?
 
   var slant: SlantPoint
@@ -113,6 +114,8 @@ class SpaceShip: SKSpriteNode {
     velocity = SlantPoint(x: 0, y: 0)
     let texture = color.image()
     fuel = fuelCapacity
+    let turnIndicatorTexture = SKTexture(imageNamed: "CurrentTurnIndicator")
+    turnIndicator = SKSpriteNode(texture: turnIndicatorTexture)
     super.init(texture: texture, color: UIColor.clear, size: texture.size())
     self.name = name
     position = slantToView(slant, tiles: tileMap)
@@ -121,6 +124,7 @@ class SpaceShip: SKSpriteNode {
     arrows!.position = self.position
     arrows!.isHidden = true
     tileMap.addChild(arrows!)
+    self.addChild(turnIndicator)
     zPosition = 20
     physicsBody = SKPhysicsBody(circleOfRadius: 5)
     physicsBody?.categoryBitMask = shipContactMask
@@ -240,6 +244,7 @@ class SpaceShip: SKSpriteNode {
   func startTurn() {
     print("start turn for \(name!)")
     arrows?.isHidden = false
+    turnIndicator.isHidden = false
     watcher?.updateShipInformation(getInformation())
   }
 
@@ -249,6 +254,7 @@ class SpaceShip: SKSpriteNode {
       arrows?.detectOverlap()
     }
     arrows?.isHidden = true
+    turnIndicator.isHidden = true
     if (turnsDisabled > 0) {
       turnsDisabled -= 1
       if(turnsDisabled == 0) {
