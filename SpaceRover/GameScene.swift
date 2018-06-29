@@ -32,6 +32,14 @@ enum TurnState {
   case WAITING_FOR_DIRECTION, MOVING, TURN_DONE, GAME_OVER
 }
 
+func sin(degrees: Double) -> Double {
+  return __sinpi(degrees/180.0)
+}
+
+func cos(degrees: Double) -> Double {
+  return __cospi(degrees/180.0)
+}
+
 class GameScene: SKScene, SKPhysicsContactDelegate {
   // Where is each planet?
   var planetLocations = [String: SlantPoint]()
@@ -62,9 +70,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
       if let orbiting = planetInfo.orbiting {
         let parentLocation = slantToView(planetLocations[orbiting]!, tiles: tileMap!)
         while (spLoc == nil) {
-          let theta = getRandom(min: 0, max: 359)
-          let numX = sin(Double(theta)) * Double(planetInfo.orbitDistance)
-          let numY = cos(Double(theta)) * Double(planetInfo.orbitDistance)
+          let theta = Double(getRandom(min: 0, max: 359))
+          let numX = sin(degrees: theta) * Double(planetInfo.orbitDistance)
+          let numY = cos(degrees: theta) * Double(planetInfo.orbitDistance)
           let cg = CGPoint(x:CGFloat(numX)+parentLocation.x, y:CGFloat(numY)+parentLocation.y)
           spLoc = viewToSlant(cg, tiles: tileMap!)
         }

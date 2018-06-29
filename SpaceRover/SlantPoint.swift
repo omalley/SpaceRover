@@ -143,7 +143,7 @@ func slantToView(_ pos: SlantPoint, tiles: SKTileMapNode) -> CGPoint {
 func viewToSlant(_ pos: CGPoint, tiles: SKTileMapNode) -> SlantPoint? {
   let x = tiles.tileColumnIndex(fromPosition: pos)
   let y = tiles.tileRowIndex(fromPosition: pos)
-  if (x == UInt.max || y == UInt.max){
+  if (x < 0 || x >= tiles.numberOfColumns || y < 0 || y >= tiles.numberOfRows){
     return nil;
   }
   return SlantPoint(x: x + ((y+1) / 2), y: y)
