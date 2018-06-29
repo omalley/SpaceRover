@@ -60,8 +60,13 @@ let accelerationContactMask: UInt32 = 8
 let asteroidsContactMask: UInt32 = 16
 
 protocol ShipInformationWatcher {
+  /**
+   * Process notifications and return true if there are still notifications
+   */
+  func handleNextNotification() -> Bool
   func getTurnState() -> TurnState
   func updateShipInformation(_ msg: String)
+  func optionalHalfGravity(ship: SpaceShip, gravity: GravityArrow)
   func crash(ship:SpaceShip)
   func startTurn(player: String)
   func shipMoving(ship: SpaceShip)
@@ -80,7 +85,6 @@ func rollDie() -> Int {
 }
 
 class SpaceShip: SKSpriteNode {
-
   let tileMap: SKTileMapNode
   let player: PlayerInfo
   let fuelCapacity = 20
@@ -97,6 +101,9 @@ class SpaceShip: SKSpriteNode {
   var isDead = false
   var turnsDisabled = 0
   var deathReason: String?
+  // We need to count how many half gravity wells this ship has hit this turn, because
+  // every other half gravity is optional.
+  var halfGravityHits = 0
 
   convenience init(name: String, on: Planet, tiles: SKTileMapNode, color: SpaceshipColor,
                    player: PlayerInfo) {
@@ -151,7 +158,19 @@ class SpaceShip: SKSpriteNode {
   func enterGravity(_ gravity: GravityArrow) {
     if (!hasLanded) {
       print("\(self.name!) hit \(gravity.name!)")
-      accelerateShip(direction: gravity.direction)
+      switch gravity.strength {
+      case .full:
+        accelerateShip(direction: gravity.direction)
+      case .half:
+        halfGravityHits += 1
+        if halfGravityHits % 2 == 1 {
+          accelerateShip(direction: gravity.direction)
+        } else {
+          watcher?.optionalHalfGravity(ship: self, gravity: gravity)
+        }
+      case .none:
+        break
+      }
     }
   }
 
@@ -223,6 +242,7 @@ class SpaceShip: SKSpriteNode {
 
   func move() {
     print("moving \(name!) by \(velocity)")
+    halfGravityHits = 0
     if !hasLanded {
       arrows?.removeLandingButtons()
       watcher?.shipMoving(ship: self)

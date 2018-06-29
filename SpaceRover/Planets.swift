@@ -119,7 +119,7 @@ class GravityArrow: SKSpriteNode {
                                  CGPoint(x:0, y:64),
                                  CGPoint(x:111, y:0)])
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
-    self.name = "Gravity \(direction) toward \(planet.name!)"
+    self.name = "\(strength) gravity \(direction) toward \(planet.name!)"
     zPosition = 10
     alpha = 0.6
     self.position = position

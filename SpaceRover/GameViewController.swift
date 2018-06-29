@@ -13,12 +13,70 @@ enum GameState {
   case NOT_STARTED, IN_PROGRESS, FINISHED
 }
 
+class PlayerNotification {
+  let view: GameViewController
+  let ship: SpaceShip
+
+  init(view: GameViewController, ship: SpaceShip) {
+    self.view = view
+    self.ship = ship
+  }
+
+  func present() {
+    // Nothing here
+  }
+
+  func dismiss() {
+    _ = view.handleNextNotification()
+  }
+}
+
+class ShipCrashNotification: PlayerNotification {
+  override func present() {
+    super.present()
+    let alert = UIAlertController(title:"Ship \(ship.name!) destroyed!",
+      message: ship.deathReason!, preferredStyle: .alert)
+    let alertAction = UIAlertAction(title: "Okay", style: .default, handler: {_ in
+      if self.view.roverScene!.turnState == TurnState.GAME_OVER {
+        self.view.endGame(self.view.roverScene!)
+      }
+      self.dismiss()})
+    alert.addAction(alertAction)
+    view.present(alert, animated: true)
+  }
+}
+
+class HalfGravityQuestion: PlayerNotification {
+  let gravity: GravityArrow
+
+  init(view: GameViewController, ship: SpaceShip, gravity: GravityArrow) {
+    self.gravity = gravity
+    super.init(view: view, ship: ship)
+  }
+
+  override func present() {
+    super.present()
+    let alert = UIAlertController(title:"Ship \(ship.name!)", message: "Accept \(gravity.name!)",
+                                  preferredStyle: .alert)
+    let noButton = UIAlertAction(title: "No", style: .cancel, handler: {_ in self.dismiss()})
+    alert.addAction(noButton)
+    let yesButton = UIAlertAction(title: "Yes", style: .default,
+                                    handler: {_ in
+                                      self.ship.accelerateShip(direction: self.gravity.direction)
+                                      self.ship.moveAccArrows()
+                                      self.dismiss()})
+    alert.addAction(yesButton)
+    view.present(alert, animated: true)
+  }
+}
+
 class GameViewController: UIViewController, ShipInformationWatcher {
 
   var roverScene: GameScene?
   var players: [PlayerInfo]?
   var state = GameState.NOT_STARTED
   var randomMap = false
+  var notificationList = [PlayerNotification]()
 
   @IBAction func doPan(_ sender: UIPanGestureRecognizer) {
     roverScene?.doPan(sender.velocity(in: self.view))
@@ -43,7 +101,7 @@ class GameViewController: UIViewController, ShipInformationWatcher {
     let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
     if let rover = roverScene {
       for player in rover.players {
-        if !player.ship.isDead{
+        if !player.ship.isDead {
           alert.addAction(UIAlertAction(title: player.info.shipName, style: .default) {
             _ in self.roverScene!.moveTo(player.ship)
           })
@@ -79,7 +137,6 @@ class GameViewController: UIViewController, ShipInformationWatcher {
         self.selfDestruct(ship: rover.players[rover.nextPlayer].ship)
       }
     })
-
     alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 
     present(alert, animated: true)
@@ -146,15 +203,10 @@ class GameViewController: UIViewController, ShipInformationWatcher {
   
   func crash(ship: SpaceShip) {
     roverScene?.shipDeath(ship: ship)
-    let alert = UIAlertController(title:"Crash!", message: ship.deathReason!,
-                                  preferredStyle: .alert)
-    let alertAction = UIAlertAction(title: "Okay", style: .default,
-                                    handler: {(action: UIAlertAction!) in
-                                              if self.roverScene!.turnState == TurnState.GAME_OVER {
-                                                self.endGame(self.roverScene!)
-                                              }})
-    alert.addAction(alertAction)
-    self.present(alert, animated: true)
+    // gravity notifications don't matter if they crashed ...
+    notificationList.removeAll()
+    notificationList.append(ShipCrashNotification(view: self, ship: ship))
+    _ = handleNextNotification()
   }
 
   func startTurn(player: String) {
@@ -180,7 +232,6 @@ class GameViewController: UIViewController, ShipInformationWatcher {
     }
   }
 
-
   func shipMoving(ship: SpaceShip) {
     roverScene?.turnState = TurnState.MOVING
   }
@@ -191,5 +242,19 @@ class GameViewController: UIViewController, ShipInformationWatcher {
 
   func getTurnState() -> TurnState {
     return roverScene!.turnState
+  }
+
+  func optionalHalfGravity(ship: SpaceShip, gravity: GravityArrow) {
+    notificationList.append(HalfGravityQuestion(view: self, ship: ship, gravity: gravity));
+    _ = handleNextNotification()
+  }
+
+  func handleNextNotification() -> Bool {
+    let notEmpty = notificationList.count > 0
+    if self.presentedViewController == nil && notEmpty {
+      let next = notificationList.remove(at: 0)
+      next.present()
+    }
+    return self.presentedViewController != nil || notEmpty
   }
 }

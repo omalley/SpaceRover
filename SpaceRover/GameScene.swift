@@ -325,18 +325,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     case .WAITING_FOR_DIRECTION, .GAME_OVER:
       break
     case .MOVING:
-      if nextPlayer < players.count {
-        let ship = players[nextPlayer].ship
-        if !ship.arrows!.hasActions() && !ship.hasActions() {
-          ship.endTurn()
-          if remainingPlanets[ship.player.playerName]?.count == 0 {
-            print("\(ship.player.playerName) won")
-            turnState = TurnState.GAME_OVER
-            winner = ship.player
-            watcher?.endGame(self)
-          } else {
-            watcher?.shipDoneMoving(ship: ship)
-          }
+      let ship = players[nextPlayer].ship
+      if !ship.arrows!.hasActions() && !ship.hasActions() &&
+        (watcher == nil || !watcher!.handleNextNotification()) {
+        ship.endTurn()
+        if remainingPlanets[ship.player.playerName]?.count == 0 {
+          print("\(ship.player.playerName) won")
+          turnState = TurnState.GAME_OVER
+          winner = ship.player
+          watcher?.endGame(self)
+        } else {
+          watcher?.shipDoneMoving(ship: ship)
         }
       }
     case .TURN_DONE:
