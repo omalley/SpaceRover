@@ -42,6 +42,18 @@ class ScenarioSelectionController: UIViewController, UITableViewDataSource {
     }
   }
 
+  @IBAction func startGame(_ sender: Any) {
+    if players.count < 1 || players.count > 6 {
+      let alert = UIAlertController(title:"Invalid number of players",
+        message: "Please enter between 1 and 6 players", preferredStyle: .alert)
+      let okayAction = UIAlertAction(title: "Okay", style: .cancel)
+      alert.addAction(okayAction)
+      present(alert, animated: true)
+    } else {
+      performSegue(withIdentifier: "startGame", sender: self)
+    }
+  }
+
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
     return players.count
   }

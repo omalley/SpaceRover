@@ -33,7 +33,6 @@ class PlayerNotification {
 
 class ShipCrashNotification: PlayerNotification {
   override func present() {
-    super.present()
     let alert = UIAlertController(title:"Ship \(ship.name!) destroyed!",
       message: ship.deathReason!, preferredStyle: .alert)
     let alertAction = UIAlertAction(title: "Okay", style: .default, handler: {_ in
@@ -55,7 +54,6 @@ class HalfGravityQuestion: PlayerNotification {
   }
 
   override func present() {
-    super.present()
     let alert = UIAlertController(title:"Ship \(ship.name!)", message: "Accept \(gravity.name!)",
                                   preferredStyle: .alert)
     let noButton = UIAlertAction(title: "No", style: .cancel, handler: {_ in self.dismiss()})
