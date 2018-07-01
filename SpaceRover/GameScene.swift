@@ -112,30 +112,36 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
   }
   
-  // the landable property is set for the race scenario
+  /**
+   * The primary information for the planets.
+   * The landable property is set for the race scenario
+   * orbitDistance is the number of points (110 per hex) for the orbit. This represents 1 point per
+   * 100,000 miles of the real planet. Moon orbits are set 1 point per 1,000 miles so that they
+   * aren't in the same hex as the planet. *smile*
+   */
   let planetInformation = [
     PlanetInformation(name: "Sol", width:55, isLandable:false, gravity:.full, orbiting:nil,
                       orbitDistance:0),
     PlanetInformation(name: "Mercury", width:15, isLandable:false, gravity:.full, orbiting:"Sol",
-                      orbitDistance:400),
+                      orbitDistance:368),
     PlanetInformation(name: "Venus", width:25, isLandable:true, gravity:.full, orbiting:"Sol",
-                      orbitDistance:768),
+                      orbitDistance:672),
     PlanetInformation(name: "Earth", width:25, isLandable:true, gravity:.full, orbiting:"Sol",
-                      orbitDistance:1152),
+                      orbitDistance:930),
     PlanetInformation(name: "Luna", width:10, isLandable:false, gravity:.half, orbiting:"Earth",
-                      orbitDistance:293),
+                      orbitDistance:239),
     PlanetInformation(name: "Mars", width:20, isLandable:true, gravity:.full, orbiting:"Sol",
-                      orbitDistance:2163),
+                      orbitDistance:1416),
     PlanetInformation(name: "Jupiter", width:45, isLandable:false, gravity:.full, orbiting:"Sol",
-                      orbitDistance:3463),
+                      orbitDistance:4836),
     PlanetInformation(name: "Callisto", width:10, isLandable:true, gravity:.full,
-                      orbiting:"Jupiter",orbitDistance:554),
+                      orbiting:"Jupiter", orbitDistance:1168),
     PlanetInformation(name: "Ganymede", width:10, isLandable:false, gravity:.full,
-                      orbiting:"Jupiter", orbitDistance:384),
+                      orbiting:"Jupiter", orbitDistance:665),
     PlanetInformation(name: "Io", width:10, isLandable:false, gravity:.half, orbiting:"Jupiter",
-                      orbitDistance:222),
+                      orbitDistance:262),
     PlanetInformation(name: "Ceres", width:12, isLandable:false, gravity:.none, orbiting:"Sol",
-                      orbitDistance:2663)
+                      orbitDistance:2574)
   ]
 
   let asteroids = [
