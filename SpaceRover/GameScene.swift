@@ -75,6 +75,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
           let numY = cos(degrees: theta) * Double(planetInfo.orbitDistance)
           let cg = CGPoint(x:CGFloat(numX)+parentLocation.x, y:CGFloat(numY)+parentLocation.y)
           spLoc = viewToSlant(cg, tiles: tileMap!)
+          print("\(planetInfo.name) got \(String(describing: spLoc)) and \(numX),\(numY) with \(theta) degrees")
         }
       } else {
         spLoc = SlantPoint(x:39,y:23)
