@@ -8,6 +8,35 @@
 
 import SpriteKit
 
+/**
+ * A point in the Apple SpriteKit hex coordinates.
+ */
+struct AppleHex {
+  var column: Int
+  var row: Int
+
+  func toSlantPoint() -> SlantPoint {
+    return SlantPoint(x: column + ((row+1) / 2), y: row)
+  }
+}
+
+/*
+ * SlantPoint hex coordinates
+ * (-1,2)(0,2) (1,2) (2,2)
+ *    (-1,1)(0,1) (1,1) (2,1)
+ *       (-1,0)(0,0)  (1,0) (2,0)
+ *          (-1,-1)(0,-1)(1,-1)(2,-1)
+ *             (-1,-2)(0,-2)(1,-2)(2,-2)
+ *
+ * Apple hex coordinates
+ * (-2,2)(-1,2) (0,2) (1,2)
+ *    (-2,1)(-1,1) (0,1) (1,1)
+ *       (-1,0)(0,0)  (1,0) (2,0)
+ *          (-1,-1)(0,-1)(1,-1)(2,-1)
+ *             (0,-2)(1,-2)(2,-2)(3,-2)
+ *
+ */
+
 struct SlantPoint: Equatable {
   var x: Int
   var y: Int
@@ -18,6 +47,10 @@ struct SlantPoint: Equatable {
 
   static func +(lhs: SlantPoint, rhs: SlantPoint) -> SlantPoint {
     return SlantPoint(x: lhs.x + rhs.x, y: lhs.y + rhs.y)
+  }
+
+  func toAppleHex() -> AppleHex {
+    return AppleHex(column: x - ((y+1) / 2), row: y)
   }
 }
 
@@ -119,25 +152,14 @@ extension HexDirection {
   }
 }
 
-/**
- * Slantpoint Grid Matrix
- * (-1,2)(0,2) (1,2) (2,2)
- *    (-1,1)(0,1) (1,1) (2,1)
- *       (-1,0)(0,0)  (1,0) (2,0)
- *          (-1,-1)(0,-1)(1,-1)(2,-1)
- *             (-1,-2)(0,-2)(1,-2)(2,-2)
- *
- * Swift Hex Matrix
- * (-2,2)(-1,2) (0,2) (1,2)
- *    (-2,1)(-1,1) (0,1) (1,1)
- *       (-1,0)(0,0)  (1,0) (2,0)
- *          (-1,-1)(0,-1)(1,-1)(2,-1)
- *             (0,-2)(1,-2)(2,-2)(3,-2)
- *
- **/
-
 func slantToView(_ pos: SlantPoint, tiles: SKTileMapNode) -> CGPoint {
   return tiles.centerOfTile(atColumn: pos.x - ((pos.y+1) / 2), row: pos.y)
+}
+
+func viewDistance(_ pos1: SlantPoint, _ pos2: SlantPoint, tiles: SKTileMapNode) -> Double {
+  let view1 = slantToView(pos1, tiles: tiles)
+  let view2 = slantToView(pos2, tiles: tiles)
+  return hypot(Double(view1.x) - Double(view2.x), Double(view1.y) - Double(view2.y))
 }
 
 func viewToSlant(_ pos: CGPoint, tiles: SKTileMapNode) -> SlantPoint? {
