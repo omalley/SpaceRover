@@ -20,14 +20,38 @@ class PlayerInfo {
   }
 }
 
-class ScenarioSelectionController: UIViewController, UITableViewDataSource {
+enum Scenario: Int {
+  case RACE_CLASSIC = 0, RACE_RANDOM = 1;
+}
 
-  @IBOutlet weak var randomMapSwitch: UISwitch!
+extension Scenario {
+
+  static func count() -> Int {
+    return 2
+  }
+
+  func name() -> String {
+    switch (self) {
+    case .RACE_CLASSIC:
+      return "Race - Classic Map"
+    case .RACE_RANDOM:
+      return "Race - Random Map"
+    }
+  }
+}
+
+class ScenarioSelectionController: UIViewController, UITableViewDataSource,
+UIPickerViewDelegate, UIPickerViewDataSource {
+
   @IBOutlet weak var playerTable: UITableView!
+  @IBOutlet weak var scenarioPicker: UIPickerView!
+  var pickedScenario: Scenario = Scenario.RACE_CLASSIC
 
   override func viewDidLoad() {
     super.viewDidLoad()
     playerTable?.dataSource = self
+    scenarioPicker?.delegate = self
+    scenarioPicker?.dataSource = self
   }
 
   var players: [PlayerInfo] = [PlayerInfo(player:"Owen", ship: "Hyperion", color: .blue),
@@ -37,7 +61,7 @@ class ScenarioSelectionController: UIViewController, UITableViewDataSource {
     if let game = segue.destination as? GameViewController {
       print("Starting game")
       game.players = players
-      game.randomMap = randomMapSwitch.isOn
+      game.randomMap = pickedScenario == Scenario.RACE_RANDOM
       game.state = GameState.NOT_STARTED
     }
   }
@@ -98,5 +122,23 @@ class ScenarioSelectionController: UIViewController, UITableViewDataSource {
 
   @IBAction func gameFinished(sender: UIStoryboardSegue) {
     // we don't really need to do anything here
+  }
+
+  func numberOfComponents(in pickerView: UIPickerView) -> Int {
+    return 1
+  }
+
+  func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+    return Scenario.count()
+  }
+
+  // The data to return for the row and component (column) that's being passed in
+  func pickerView(_ pickerView: UIPickerView, titleForRow row: Int,
+                  forComponent component: Int) -> String? {
+    return Scenario(rawValue: row)!.name()
+  }
+
+  func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+    pickedScenario = Scenario(rawValue: row)!
   }
 }

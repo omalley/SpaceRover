@@ -65,8 +65,6 @@ extension HexDirection {
     }
   }
 
-
-
   struct HexDirectionGenerator: IteratorProtocol {
     var currentSection = 0
 
