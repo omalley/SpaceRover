@@ -6,6 +6,7 @@
 //  Copyright © 2017 Hazen O'Malley. All rights reserved.
 //
 
+import CoreData
 import UIKit
 
 class PlayerEntryController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSource {
@@ -32,11 +33,11 @@ class PlayerEntryController: UIViewController, UIPickerViewDelegate, UIPickerVie
 
   // The data to return for the row and component (column) that's being passed in
   func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
-    return SpaceshipColor(rawValue: row)?.toString()
+    return SpaceshipColor(rawValue: Int16(row))?.toString()
   }
 
   func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-    pickedColor = SpaceshipColor(rawValue: row)!
+    pickedColor = SpaceshipColor(rawValue: Int16(row))!
   }
 
   @IBAction func savePlayer(_ sender: UIBarButtonItem) {
@@ -48,8 +49,11 @@ class PlayerEntryController: UIViewController, UIPickerViewDelegate, UIPickerVie
     dismiss(animated: true, completion: nil)
   }
 
-  func getPlayerInfo() -> PlayerInfo? {
-    return PlayerInfo(player: playerName.text ?? "Player", ship: shipName.text ?? "Foobar",
-                      color: pickedColor)
+  func getPlayerInfo(context: NSManagedObjectContext) -> PlayerInfo? {
+    let result = PlayerInfo(context: context)
+    result.name = playerName.text
+    result.shipName = shipName.text
+    result.color = pickedColor
+    return result;
   }
 }

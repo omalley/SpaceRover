@@ -8,20 +8,20 @@
 
 import SpriteKit
 
-enum SpaceshipColor: Int {
+enum SpaceshipColor: Int16 {
   case blue,red,green,purple,orange,yellow;
 }
 
 extension SpaceshipColor {
 
   static func count() -> Int {
-    return SpaceshipColor.yellow.rawValue + 1
+    return Int(SpaceshipColor.yellow.rawValue + 1)
   }
 
   func image() -> SKTexture {
     switch (self) {
     case .blue:
-      return SKTexture(imageNamed: "SpaceshipUpRight")
+      return SKTexture(imageNamed: "SpaceshipBlue")
     case .red:
       return SKTexture(imageNamed: "SpaceshipRed")
     case .green:

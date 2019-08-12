@@ -6,19 +6,8 @@
 //  Copyright © 2017 Hazen O'Malley. All rights reserved.
 //
 
+import CoreData
 import UIKit
-
-class PlayerInfo {
-  var playerName: String
-  var shipName: String
-  var color: SpaceshipColor
-
-  init(player: String, ship: String, color: SpaceshipColor) {
-    self.playerName = player
-    self.shipName = ship
-    self.color = color
-  }
-}
 
 enum Scenario: Int {
   case RACE_CLASSIC = 0, RACE_RANDOM = 1;
@@ -52,10 +41,15 @@ UIPickerViewDelegate, UIPickerViewDataSource {
     playerTable?.dataSource = self
     scenarioPicker?.delegate = self
     scenarioPicker?.dataSource = self
+    loadPlayers()
   }
 
-  var players: [PlayerInfo] = [PlayerInfo(player:"Owen", ship: "Hyperion", color: .blue),
-                               PlayerInfo(player:"Hazen", ship: "Vanguard II", color: .red)]
+  lazy var context: NSManagedObjectContext? = {
+    let delegate = UIApplication.shared.delegate as? AppDelegate
+    return delegate?.persistentContainer.viewContext
+  }()
+
+  var players = [PlayerInfo]()
 
   override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
     if let game = segue.destination as? GameViewController {
@@ -85,9 +79,9 @@ UIPickerViewDelegate, UIPickerViewDataSource {
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
     let cell = tableView.dequeueReusableCell(withIdentifier: "PlayerListCell", for: indexPath)
 
-    cell.textLabel?.text = players[indexPath.row].playerName
+    cell.textLabel?.text = players[indexPath.row].name
     cell.detailTextLabel?.text = players[indexPath.row].shipName
-    let image = players[indexPath.row].color.image().cgImage()
+    let image = players[indexPath.row].color!.image().cgImage()
     cell.imageView?.image = UIImage(cgImage: image)
 
     return cell
@@ -95,11 +89,12 @@ UIPickerViewDelegate, UIPickerViewDataSource {
 
   @IBAction func addNewPlayer(sender: UIStoryboardSegue) {
     if let sourceController = sender.source as? PlayerEntryController,
-      let player = sourceController.getPlayerInfo() {
+      let player = sourceController.getPlayerInfo(context: context!) {
 
       let newIndexPath = IndexPath(row: players.count, section: 0)
+      player.turn = Int32(players.count)
       players.append(player)
-
+      save(context: context!)
       playerTable.insertRows(at: [newIndexPath], with: .automatic)
     }
   }
@@ -110,13 +105,18 @@ UIPickerViewDelegate, UIPickerViewDataSource {
     if editingStyle == .delete {
 
       // remove the item from the data model
+      let player = players[indexPath.row]
+      context?.delete(player)
       players.remove(at: indexPath.row)
+      var turn = 0
+      for other in players {
+        other.turn = Int32(turn)
+        turn += 1
+      }
+      save(context: context!)
 
       // delete the table view row
       tableView.deleteRows(at: [indexPath], with: .fade)
-
-    } else if editingStyle == .insert {
-      // Not used in our example, but if you were adding a new row, this is where you would do it.
     }
   }
 
@@ -140,5 +140,13 @@ UIPickerViewDelegate, UIPickerViewDataSource {
 
   func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
     pickedScenario = Scenario(rawValue: row)!
+  }
+
+  func loadPlayers() {
+    do {
+      players = try context!.fetch(PlayerInfo.fetchRequest())
+    } catch let error as NSError {
+      fatalError("Error loading players: \(error), \(error.userInfo)")
+    }
   }
 }

@@ -14,8 +14,8 @@ class Player {
 
   init(_ description: PlayerInfo, on: Planet) {
     info = description
-    ship = SpaceShip(name: info.shipName, on: on, tiles: on.parent as! SKTileMapNode,
-                     color: info.color, player: info)
+    ship = SpaceShip(name: info.shipName!, on: on, tiles: on.parent as! SKTileMapNode,
+                     color: info.color!, player: info)
   }
 }
 
@@ -97,7 +97,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     planetLocations["Ganymede"] = SlantPoint(x:63, y:61)
     planetLocations["Io"] = SlantPoint(x:59, y:57)
     planetLocations["Ceres"] = SlantPoint(x:47, y:50)
-    printPlanetDistances()
   }
 
   let originalAsteroids = [
@@ -397,10 +396,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
       let player = Player(name, on: earth!)
       player.ship.setWatcher(watcher)
       players.append(player)
-      remainingPlanets[name.playerName] = Set<Planet>()
+      remainingPlanets[name.name!] = Set<Planet>()
       for (_, planet) in planets {
         if planet.gravity == GravityStrength.full {
-          remainingPlanets[name.playerName]?.insert(planet)
+          remainingPlanets[name.name!]?.insert(planet)
         }
       }
     }
@@ -408,7 +407,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     livePlayers = players.count
     players[nextPlayer].ship.startTurn()
     turns = 1
-    watcher?.startTurn(player: players[nextPlayer].info.playerName)
+    watcher?.startTurn(player: players[nextPlayer].info.name!)
   }
 
   let PAN_SLOWDOWN: CGFloat = 20.0
@@ -450,7 +449,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
           }
           nextPlayer = candidate
           moveTo(players[nextPlayer].ship)
-          watcher?.startTurn(player: players[nextPlayer].info.playerName)
+          watcher?.startTurn(player: players[nextPlayer].info.name!)
           players[nextPlayer].ship.startTurn()
           turnState = TurnState.WAITING_FOR_DIRECTION
           return
@@ -468,8 +467,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
       if !ship.arrows!.hasActions() && !ship.hasActions() &&
         (watcher == nil || !watcher!.handleNextNotification()) {
         ship.endTurn()
-        if remainingPlanets[ship.player.playerName]?.count == 0 {
-          print("\(ship.player.playerName) won")
+        if remainingPlanets[ship.player.name!]?.count == 0 {
+          print("\(ship.player.name!) won")
           turnState = TurnState.GAME_OVER
           winner = ship.player
           watcher?.endGame(self)
@@ -484,7 +483,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
   func getGameState() -> String {
     if let win = winner {
-      return "\(win.playerName) won in \(turns) turns"
+      return "\(win.name!) won in \(turns) turns"
     } else if turnState == TurnState.GAME_OVER {
       return "Everyone died."
     } else {
@@ -493,7 +492,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   }
 
   func shipDeath(ship: SpaceShip) {
-    print("Player \(ship.player.playerName) died - \(ship.deathReason!)")
+    print("Player \(ship.player.name!) died - \(ship.deathReason!)")
     livePlayers -= 1
     if livePlayers == 0 {
       turnState = TurnState.GAME_OVER
@@ -507,7 +506,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
       if let planet = other as? Planet {
         ship.crash(reason: "Ship \(ship.name!) crashed in to \(planet.name!)")
       } else if let gravity = other as? GravityArrow {
-        remainingPlanets[ship.player.playerName]?.remove(gravity.planet)
+        remainingPlanets[ship.player.name!]?.remove(gravity.planet)
         ship.enterGravity(gravity)
       } else if let asteroid = other as? Asteroid {
         ship.enterAsteroids(asteroid)
