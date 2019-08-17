@@ -6,6 +6,10 @@
         <attribute name="positionX" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="positionY" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
     </entity>
+    <entity name="Game" representedClassName="Game" syncable="YES" codeGenerationType="class">
+        <attribute name="kindRaw" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
+        <attribute name="stateRaw" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
+    </entity>
     <entity name="PlayerInfo" representedClassName=".PlayerInfo" syncable="YES" codeGenerationType="class">
         <attribute name="colorRaw" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="name" attributeType="String" syncable="YES"/>
@@ -32,5 +36,6 @@
         <element name="BoardObject" positionX="-63" positionY="90" width="128" height="105"/>
         <element name="PlayerInfo" positionX="-63" positionY="-18" width="128" height="120"/>
         <element name="Ship" positionX="-54" positionY="0" width="128" height="240"/>
+        <element name="Game" positionX="-63" positionY="99" width="128" height="75"/>
     </elements>
 </model>
