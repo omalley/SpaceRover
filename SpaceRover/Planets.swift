@@ -6,38 +6,69 @@
 //  Copyright © 2018 Hazen O'Malley. All rights reserved.
 //
 
+import CoreData
 import SpriteKit
 
-enum GravityStrength {
-  case none, half, full
+enum GravityStrength: Int16 {
+  case None=0, Half, Full
 }
 
-class Planet: SKSpriteNode {
-  var slant: SlantPoint
-  let level: Int
-  let isLandable: Bool
-  let gravity: GravityStrength
-  let orbiting: Planet?
-  let orbitDistance: Int?
+enum ObjectKind: Int16 {
+  case Star=0, Planet, Moon, Asteroid
+}
 
-  convenience init(name: String, slant: SlantPoint, tiles: SKTileMapNode, radius: Int,
-                   landable: Bool, gravity: GravityStrength, orbiting: Planet?, orbitDistance: Int,
-                   level: Int) {
-    self.init(name:name, image:name, slant:slant, tiles:tiles, radius:radius, landable: landable,
-              gravity: gravity, orbiting: orbiting, orbitDistance: orbitDistance, level: level)
+extension BoardObjectModel {
+
+  var kind: ObjectKind? {
+    get {
+      return ObjectKind(rawValue: kindRaw)
+    }
+    set(value) {
+      kindRaw = value!.rawValue
+    }
   }
 
-  init(name: String, image: String, slant: SlantPoint, tiles: SKTileMapNode, radius: Int,
-       landable: Bool, gravity: GravityStrength, orbiting: Planet?, orbitDistance: Int,
-       level: Int) {
-    let texture = SKTexture(imageNamed: image)
-    self.slant = slant
-    isLandable = landable
-    self.gravity = gravity
-    self.orbiting = orbiting
-    self.orbitDistance = orbitDistance
-    self.level = level
+  var gravity: GravityStrength? {
+    get {
+      return GravityStrength(rawValue: gravityRaw)
+    }
+    set(value) {
+      gravityRaw = value!.rawValue
+    }
+  }
+
+  var position: SlantPoint {
+    get { return SlantPoint(x: Int(positionX), y: Int(positionY))}
+    set(value) {
+      positionX = Int32(value.x)
+      positionY = Int32(value.y)
+    }
+  }
+}
+
+let HEX_SIZE = 110.0
+
+class BoardObject: SKSpriteNode {
+  let model: BoardObjectModel
+
+  init(model: BoardObjectModel, texture: SKTexture, tiles: SKTileMapNode) {
+    self.model = model
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
+    position = slantToView(model.position, tiles: tiles)
+    zPosition = 10
+  }
+
+  required init?(coder aDecoder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+}
+
+class Planet: BoardObject {
+
+  init(model: BoardObjectModel, tiles: SKTileMapNode) {
+    let texture = SKTexture(imageNamed: model.name!)
+    super.init(model: model, texture: texture, tiles: tiles)
+    let name = model.name!
     let nameLabel = SKLabelNode(text: name)
     nameLabel.zPosition = 1
     nameLabel.position = CGPoint(x: 0, y: 25)
@@ -45,9 +76,8 @@ class Planet: SKSpriteNode {
     nameLabel.fontName = UiFontName
     addChild(nameLabel)
     self.name = name
-    position = slantToView(slant, tiles: tiles)
-    zPosition = 10
-    if gravity != GravityStrength.none {
+    let gravity = model.gravity!
+    if gravity != GravityStrength.None {
       for direction in HexDirection.all() {
         if direction != HexDirection.NoAcc {
           let posn = findRelativePosition(direction.invert(), tiles: tiles)
@@ -56,7 +86,7 @@ class Planet: SKSpriteNode {
         }
       }
     }
-    physicsBody = SKPhysicsBody(circleOfRadius: CGFloat(radius))
+    physicsBody = SKPhysicsBody(circleOfRadius: CGFloat(HEX_SIZE * model.radius))
     physicsBody?.categoryBitMask = planetContactMask
     physicsBody?.contactTestBitMask = shipContactMask | accelerationContactMask
     physicsBody?.collisionBitMask = 0
@@ -68,17 +98,17 @@ class Planet: SKSpriteNode {
   }
 }
 
-class Asteroid: SKSpriteNode {
+class Asteroid: BoardObject {
 
-  static let textures = [SKTexture(imageNamed: "Asteroids1"), SKTexture(imageNamed: "Asteroids2")]
+  static let textures = [SKTexture(imageNamed: "Asteroids1"),
+                         SKTexture(imageNamed: "Asteroids2")]
 
-  init(slant: SlantPoint, tiles: SKTileMapNode) {
+  init(model: BoardObjectModel, tiles: SKTileMapNode) {
     let texture = Asteroid.textures[Int(arc4random_uniform(2))]
-    super.init(texture: texture, color: UIColor.clear, size: texture.size())
+    super.init(model: model, texture: texture, tiles: tiles)
+    let slant = model.position
     name = "asteroid at \(slant.x), \(slant.y)"
-    position = slantToView(slant, tiles: tiles)
-    zPosition = 10
-    physicsBody = SKPhysicsBody(circleOfRadius: 55)
+    physicsBody = SKPhysicsBody(circleOfRadius: CGFloat(HEX_SIZE * model.radius))
     physicsBody?.categoryBitMask = asteroidsContactMask
     physicsBody?.contactTestBitMask = shipContactMask
     physicsBody?.collisionBitMask = 0
@@ -95,17 +125,18 @@ class GravityArrow: SKSpriteNode {
   let planet: Planet
   let strength: GravityStrength
 
-  init(direction: HexDirection, planet: Planet, position: CGPoint, strength: GravityStrength) {
+  init(direction: HexDirection, planet: Planet, position: CGPoint,
+       strength: GravityStrength) {
     self.direction = direction
     self.planet = planet
     self.strength = strength
     var textureName : String?;
     switch strength {
-    case .none:
+    case .None:
       break
-    case .full:
+    case .Full:
       textureName = "GravityArrow"
-    case .half:
+    case .Half:
       textureName = "HalfGravityArrow"
     }
     let texture = SKTexture(imageNamed: textureName!)

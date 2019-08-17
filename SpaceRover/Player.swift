@@ -7,9 +7,13 @@
 //
 
 import CoreData
-import Foundation
+import SpriteKit
 
-extension PlayerInfo {
+enum PlayerState: Int16 {
+  case Playing = 0, Lost, Won;
+}
+
+extension PlayerModel {
   var color: SpaceshipColor? {
     get {
       return SpaceshipColor(rawValue: colorRaw)
@@ -17,6 +21,19 @@ extension PlayerInfo {
     set(value) {
       colorRaw = value!.rawValue
     }
+  }
+
+  var state: PlayerState? {
+    get {
+      return PlayerState(rawValue: stateRaw)
+    }
+    set(value) {
+      stateRaw = value!.rawValue
+    }
+  }
+
+  var shipList: [ShipModel] {
+    return ships!.array as! [ShipModel]
   }
 }
 
