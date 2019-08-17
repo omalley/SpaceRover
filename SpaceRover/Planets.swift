@@ -8,10 +8,6 @@
 
 import SpriteKit
 
-enum GravityStrength {
-  case none, half, full
-}
-
 class Planet: SKSpriteNode {
   var slant: SlantPoint
   let level: Int
@@ -47,7 +43,7 @@ class Planet: SKSpriteNode {
     self.name = name
     position = slantToView(slant, tiles: tiles)
     zPosition = 10
-    if gravity != GravityStrength.none {
+    if gravity != GravityStrength.None {
       for direction in HexDirection.all() {
         if direction != HexDirection.NoAcc {
           let posn = findRelativePosition(direction.invert(), tiles: tiles)
@@ -101,11 +97,11 @@ class GravityArrow: SKSpriteNode {
     self.strength = strength
     var textureName : String?;
     switch strength {
-    case .none:
+    case .None:
       break
-    case .full:
+    case .Full:
       textureName = "GravityArrow"
-    case .half:
+    case .Half:
       textureName = "HalfGravityArrow"
     }
     let texture = SKTexture(imageNamed: textureName!)

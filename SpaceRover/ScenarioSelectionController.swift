@@ -91,10 +91,11 @@ UIPickerViewDelegate, UIPickerViewDataSource {
     if let sourceController = sender.source as? PlayerEntryController,
       let player = sourceController.getPlayerInfo(context: context!) {
 
-      let newIndexPath = IndexPath(row: players.count, section: 0)
       player.turn = Int32(players.count)
       players.append(player)
       save(context: context!)
+      
+      let newIndexPath = IndexPath(row: players.count, section: 0)
       playerTable.insertRows(at: [newIndexPath], with: .automatic)
     }
   }

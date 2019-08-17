@@ -16,6 +16,7 @@
 		5A4058EC20E023E200B7AF21 /* Planets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A4058EB20E023E200B7AF21 /* Planets.swift */; };
 		5ADE92E51F2CE20B009C1D1B /* GameEndController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ADE92E41F2CE20B009C1D1B /* GameEndController.swift */; };
 		5AF0DC472300D5C70006A394 /* Players.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AF0DC462300D5C70006A394 /* Players.swift */; };
+		5AF0DC492307AB220006A394 /* BoardState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AF0DC482307AB220006A394 /* BoardState.swift */; };
 		B18473C41EDE5E74000FF428 /* RoverTiles.sks in Resources */ = {isa = PBXBuildFile; fileRef = B18473C31EDE5E74000FF428 /* RoverTiles.sks */; };
 		B18473C61EE4BC51000FF428 /* SpaceShip.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18473C51EE4BC51000FF428 /* SpaceShip.swift */; };
 		B18F99071EDBD6DB001269EA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18F99061EDBD6DB001269EA /* AppDelegate.swift */; };
@@ -57,6 +58,7 @@
 		5A4058EB20E023E200B7AF21 /* Planets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Planets.swift; sourceTree = "<group>"; };
 		5ADE92E41F2CE20B009C1D1B /* GameEndController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameEndController.swift; sourceTree = "<group>"; };
 		5AF0DC462300D5C70006A394 /* Players.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Players.swift; sourceTree = "<group>"; };
+		5AF0DC482307AB220006A394 /* BoardState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardState.swift; sourceTree = "<group>"; };
 		B18473C31EDE5E74000FF428 /* RoverTiles.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = RoverTiles.sks; sourceTree = "<group>"; };
 		B18473C51EE4BC51000FF428 /* SpaceShip.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpaceShip.swift; sourceTree = "<group>"; };
 		B18F99031EDBD6DB001269EA /* SpaceRover.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpaceRover.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -156,6 +158,7 @@
 				5AF0DC462300D5C70006A394 /* Players.swift */,
 				5A0312A61F25273C004001F6 /* PlayerEntryController.swift */,
 				5A1E0EF122FC707D00BAF02B /* RoverModel.xcdatamodeld */,
+				5AF0DC482307AB220006A394 /* BoardState.swift */,
 			);
 			path = SpaceRover;
 			sourceTree = "<group>";
@@ -328,6 +331,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5AF0DC492307AB220006A394 /* BoardState.swift in Sources */,
 				5AF0DC472300D5C70006A394 /* Players.swift in Sources */,
 				5A0312A71F25273C004001F6 /* PlayerEntryController.swift in Sources */,
 				B18F990B1EDBD6DB001269EA /* GameScene.swift in Sources */,

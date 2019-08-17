@@ -159,16 +159,16 @@ class SpaceShip: SKSpriteNode {
     if (!hasLanded) {
       print("\(self.name!) hit \(gravity.name!)")
       switch gravity.strength {
-      case .full:
+      case .Full:
         accelerateShip(direction: gravity.direction)
-      case .half:
+      case .Half:
         halfGravityHits += 1
         if halfGravityHits % 2 == 1 {
           accelerateShip(direction: gravity.direction)
         } else {
           watcher?.optionalHalfGravity(ship: self, gravity: gravity)
         }
-      case .none:
+      case .None:
         break
       }
     }
