@@ -8,8 +8,26 @@
 
 import SpriteKit
 
+/*
+ * Apple hex coordinates
+ * (-2,2)  (-1,2)  (0,2)   (1,2)
+ *     (-2,1)  (-1,1)  (0,1)   (1,1)
+ *         (-1,0)  (0,0)   (1,0)   (2,0)
+ *             (-1,-1) (0,-1)  (1,-1)  (2,-1)
+ *                 (0,-2)  (1,-2)  (2,-2)  (3,-2)
+ *
+ * SlantPoint hex coordinates
+ * (-1,2)  (0,2)   (1,2)   (2,2)
+ *     (-1,1)  (0,1)   (1,1)   (2,1)
+ *         (-1,0)  (0,0)   (1,0)   (2,0)
+ *             (-1,-1) (0,-1)  (1,-1)  (2,-1)
+ *                 (-1,-2) (0,-2)  (1,-2)  (2,-2)
+ *
+ */
+
 /**
- * A point in the Apple SpriteKit hex coordinates.
+ * A point in the Apple SpriteKit hex coordinates. The columns zigzag
+ * back and forth, but generally a range of x and y define a box.
  */
 struct AppleHex {
   var column: Int
@@ -20,23 +38,14 @@ struct AppleHex {
   }
 }
 
-/*
- * SlantPoint hex coordinates
- * (-1,2)(0,2) (1,2) (2,2)
- *    (-1,1)(0,1) (1,1) (2,1)
- *       (-1,0)(0,0)  (1,0) (2,0)
- *          (-1,-1)(0,-1)(1,-1)(2,-1)
- *             (-1,-2)(0,-2)(1,-2)(2,-2)
- *
- * Apple hex coordinates
- * (-2,2)(-1,2) (0,2) (1,2)
- *    (-2,1)(-1,1) (0,1) (1,1)
- *       (-1,0)(0,0)  (1,0) (2,0)
- *          (-1,-1)(0,-1)(1,-1)(2,-1)
- *             (0,-2)(1,-2)(2,-2)(3,-2)
- *
- */
+let RootThreeHalf = sqrt(3.0)/2.0
 
+/**
+ * Slant points instead are set up so that the axes match two of the
+ * natural directions of a hex board (northeast and east). Thus, slant
+ * points are easy to add together, which is handy for games with acceleration
+ * and velocity.
+ */
 struct SlantPoint: Equatable {
   var x: Int
   var y: Int
@@ -51,6 +60,39 @@ struct SlantPoint: Equatable {
 
   func toAppleHex() -> AppleHex {
     return AppleHex(column: x - ((y+1) / 2), row: y)
+  }
+
+  /**
+   * Measure the distance between two slant points in hexes.
+   * A "hex" is the distance between the centers of two adjacent hexes.
+   */
+  func distance(_ point: SlantPoint) -> Double {
+    return hypot(Double(x - point.x) - Double(y - point.y) / 2.0,
+                 RootThreeHalf * Double(y - point.y))
+  }
+
+  /**
+   * Get the length of a vector in hexes.
+   * This is mostly used on accelerations or velocities.
+   */
+  func magnitude() -> Double {
+    let zero = SlantPoint(x: 0, y:0)
+    return distance(zero)
+  }
+
+  /**
+   * Calculate the point that is the given angle and distance from this one.
+   * degree: 0 to 360
+   * distance: measured in hexes
+   */
+  func addPolar(degree: Double, distance: Double) -> SlantPoint {
+    let xOffset = sin(degrees: degree) * distance
+    let yOffset = cos(degrees: degree) * distance
+    let ySlant = yOffset / RootThreeHalf
+    let xSlant = xOffset + ySlant / 2.0
+    let offset = SlantPoint(x: Int(round(xSlant)), y: Int(round(ySlant)))
+    print("slant = \(xSlant), \(ySlant) -> \(offset)")
+    return self + offset
   }
 }
 
@@ -183,12 +225,11 @@ func findRelativePosition(_ direction: HexDirection, tiles: SKTileMapNode) -> CG
   return CGPoint(x: posn.x - origin.x, y: posn.y - origin.y)
 }
 
-/**
- * Compute the distance from the origin measured in hex widths.
- */
-func computeDistance(_ point: SlantPoint) -> Double {
-  let y = Double(point.y) * sqrt(3.0) / 2.0
-  let x = Double(point.x) - Double(point.y) / 2.0
-  return hypot(x, y)
+
+func sin(degrees: Double) -> Double {
+  return __sinpi(degrees/180.0)
 }
 
+func cos(degrees: Double) -> Double {
+  return __cospi(degrees/180.0)
+}

@@ -84,7 +84,7 @@ class GameViewController: UIViewController, ShipInformationWatcher {
     let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
     if let rover = roverScene {
       for (name, planet) in rover.planets {
-        if (planet.level <= 1) {
+        if planet.kind == .Star || planet.kind == .Planet {
           alert.addAction(UIAlertAction(title: name, style: .default) {
             _ in self.roverScene!.moveTo(planet)
           })

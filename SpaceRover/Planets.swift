@@ -8,31 +8,21 @@
 
 import SpriteKit
 
+let HEX_SIZE = 110.0
+
 class Planet: SKSpriteNode {
   var slant: SlantPoint
-  let level: Int
   let isLandable: Bool
+  let kind: ObjectKind
   let gravity: GravityStrength
-  let orbiting: Planet?
-  let orbitDistance: Int?
 
-  convenience init(name: String, slant: SlantPoint, tiles: SKTileMapNode, radius: Int,
-                   landable: Bool, gravity: GravityStrength, orbiting: Planet?, orbitDistance: Int,
-                   level: Int) {
-    self.init(name:name, image:name, slant:slant, tiles:tiles, radius:radius, landable: landable,
-              gravity: gravity, orbiting: orbiting, orbitDistance: orbitDistance, level: level)
-  }
-
-  init(name: String, image: String, slant: SlantPoint, tiles: SKTileMapNode, radius: Int,
-       landable: Bool, gravity: GravityStrength, orbiting: Planet?, orbitDistance: Int,
-       level: Int) {
-    let texture = SKTexture(imageNamed: image)
+  init(name: String, slant: SlantPoint, tiles: SKTileMapNode, radius: Double,
+       landable: Bool, gravity: GravityStrength, kind: ObjectKind) {
+    let texture = SKTexture(imageNamed: name)
     self.slant = slant
     isLandable = landable
+    self.kind = kind
     self.gravity = gravity
-    self.orbiting = orbiting
-    self.orbitDistance = orbitDistance
-    self.level = level
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
     let nameLabel = SKLabelNode(text: name)
     nameLabel.zPosition = 1
@@ -52,7 +42,7 @@ class Planet: SKSpriteNode {
         }
       }
     }
-    physicsBody = SKPhysicsBody(circleOfRadius: CGFloat(radius))
+    physicsBody = SKPhysicsBody(circleOfRadius: CGFloat(HEX_SIZE * radius))
     physicsBody?.categoryBitMask = planetContactMask
     physicsBody?.contactTestBitMask = shipContactMask | accelerationContactMask
     physicsBody?.collisionBitMask = 0

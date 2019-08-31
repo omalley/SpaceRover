@@ -19,21 +19,11 @@ class Player {
   }
 }
 
-enum TurnState {
+enum TurnState: Int16 {
   case WAITING_FOR_DIRECTION, MOVING, TURN_DONE, GAME_OVER
 }
 
-func sin(degrees: Double) -> Double {
-  return __sinpi(degrees/180.0)
-}
-
-func cos(degrees: Double) -> Double {
-  return __cospi(degrees/180.0)
-}
-
 class GameScene: SKScene, SKPhysicsContactDelegate {
-  // Where is each planet?
-  var planetLocations = [String: SlantPoint]()
   // What part of the turn are we in?
   var turnState = TurnState.WAITING_FOR_DIRECTION
   var players: [Player] = []
@@ -49,6 +39,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   // map from the player's name to the list of planets they still need to reach
   var remainingPlanets = [String: Set<Planet>]()
 
+  lazy var board: BoardState = {
+    let delegate = UIApplication.shared.delegate as? AppDelegate
+    return BoardState(width: tileMap!.numberOfColumns,
+                      height: tileMap!.numberOfRows,
+                      context: delegate!.persistentContainer.viewContext,
+                      system: SystemDescription())
+  }()
+
   override func didMove(to view: SKView) {
     /* Setup your scene here */
     for child in children {
@@ -59,33 +57,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     tileMap?.isUserInteractionEnabled = true
 
     if randomMap {
-      //RANDOM PLANETS
-      randomizeLocations()
-      createRandomAsteroids()
+      board.randomizeLocations()
     } else {
-      //ORDERED PLANETS
-      setOriginalLocation()
-      // Adding asteroids
-      for location in originalAsteroids {
-        tileMap?.addChild(Asteroid(slant: location, tiles: tileMap!))
-      }
+      board.classicLocations()
     }
 
-    //Adding Planets
-    for planetInfo in planetInformation {
-      var depth = 0
-      var parent: Planet? = nil
-      if let orbit = planetInfo.orbiting {
-        parent = planets[orbit]
-        depth = parent!.level + 1
+    // create the sprites for the board elements
+    for obj in board.elements {
+      switch obj.kind! {
+      case .Asteroid:
+        tileMap?.addChild(Asteroid(slant: obj.toSlant(), tiles: tileMap!))
+      case .Planet, .Moon, .Star:
+        let planet = Planet(name: obj.name!, slant: obj.toSlant(),
+                            tiles: tileMap!, radius: obj.radius,
+                            landable: obj.isLandable, gravity: obj.gravity!,
+                            kind: obj.kind!)
+        tileMap?.addChild(planet)
+        planets[obj.name!] = planet
       }
-      let planet = Planet(name: planetInfo.name, slant: planetLocations[planetInfo.name]!,
-                          tiles: tileMap!,
-                          radius: planetInfo.width, landable: planetInfo.isLandable,
-                                            gravity: planetInfo.gravity, orbiting: parent,
-                          orbitDistance: planetInfo.orbitDistance, level: depth)
-      tileMap?.addChild(planet)
-      planets[planetInfo.name] = planet
     }
 
     moveTo(planets["Earth"]!)

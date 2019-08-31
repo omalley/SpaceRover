@@ -221,7 +221,7 @@ class SpaceShip: SKSpriteNode {
     } else if turnsDisabled != 0 {
       return "\(name!)\nFuel: \(fuel)\nDisabled: \(turnsDisabled)"
     } else {
-      return "\(name!)\nFuel: \(fuel)\nSpeed: \(computeDistance(velocity))"
+      return "\(name!)\nFuel: \(fuel)\nSpeed: \(velocity.magnitude())"
     }
   }
 
@@ -335,7 +335,7 @@ class SpaceShip: SKSpriteNode {
   }
 
   func enterAsteroids(_ asteroid: Asteroid) {
-    if computeDistance(velocity) > 1 {
+    if velocity.magnitude() > 1 {
       print("\(name!) entered \(asteroid.name!)")
       let die = rollDie()
       print("Rolled a \(die)")
