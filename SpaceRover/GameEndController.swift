@@ -32,7 +32,7 @@ class GameEndController: UIViewController, UITableViewDataSource {
   }
 
   func getRemainingPlanets(_ player: Player) -> String {
-    let remaining = gameState?.remainingPlanets[player.info.name!]
+    let remaining = gameState?.remainingPlanets[player.model.name!]
     var result = ""
     var first = true
     for planet in remaining! {
@@ -49,13 +49,15 @@ class GameEndController: UIViewController, UITableViewDataSource {
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
     let cell = tableView.dequeueReusableCell(withIdentifier: "gameEndPlayerInfo", for: indexPath)
     let player = gameState!.players[indexPath.row]
-    cell.textLabel?.text = player.info.name
-    if player.ship.isDead {
-      cell.detailTextLabel?.text = player.ship.deathReason!
-    } else if gameState?.winner != nil && gameState?.winner! === player.info {
-      cell.detailTextLabel?.text = "Winner"
-    } else {
+    cell.textLabel?.text = player.model.name
+    
+    switch player.model.state! {
+    case .Lost:
+      cell.detailTextLabel?.text = player.ship.model.deathReason!
+    case .Playing:
       cell.detailTextLabel?.text = getRemainingPlanets(player)
+    case .Won:
+      cell.detailTextLabel?.text = "Winner"
     }
     return cell
   }

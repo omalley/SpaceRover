@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14492.1" systemVersion="18G87" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
-    <entity name="BoardObject" representedClassName=".BoardObject" syncable="YES" codeGenerationType="class">
+    <entity name="BoardObjectModel" representedClassName=".BoardObjectModel" syncable="YES" codeGenerationType="class">
         <attribute name="gravityRaw" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="isLandable" optional="YES" attributeType="Boolean" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="kindRaw" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
@@ -8,19 +8,26 @@
         <attribute name="positionX" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="positionY" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="radius" optional="YES" attributeType="Double" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
+        <relationship name="inOrbit" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="ShipModel" inverseName="orbitAround" inverseEntity="ShipModel" syncable="YES"/>
+        <relationship name="needForRace" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="ShipModel" inverseName="raceGoals" inverseEntity="ShipModel" syncable="YES"/>
     </entity>
-    <entity name="Game" representedClassName="Game" syncable="YES" codeGenerationType="class">
-        <attribute name="kindRaw" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
+    <entity name="GameModel" representedClassName="GameModel" syncable="YES" codeGenerationType="class">
+        <attribute name="scenarioRaw" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="stateRaw" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
+        <attribute name="turnCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
+        <relationship name="players" optional="YES" toMany="YES" minCount="1" maxCount="10" deletionRule="Cascade" ordered="YES" destinationEntity="PlayerModel" inverseName="game" inverseEntity="PlayerModel" syncable="YES"/>
+        <relationship name="winner" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PlayerModel" inverseName="wonGame" inverseEntity="PlayerModel" syncable="YES"/>
     </entity>
-    <entity name="PlayerInfo" representedClassName=".PlayerInfo" syncable="YES" codeGenerationType="class">
+    <entity name="PlayerModel" representedClassName=".PlayerModel" syncable="YES" codeGenerationType="class">
         <attribute name="colorRaw" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
+        <attribute name="hasLost" optional="YES" attributeType="Boolean" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="name" attributeType="String" syncable="YES"/>
         <attribute name="shipName" optional="YES" attributeType="String" syncable="YES"/>
-        <attribute name="turn" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
-        <relationship name="ships" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Ship" inverseName="owner" inverseEntity="Ship" syncable="YES"/>
+        <relationship name="game" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="GameModel" inverseName="players" inverseEntity="GameModel" syncable="YES"/>
+        <relationship name="ships" optional="YES" toMany="YES" minCount="1" deletionRule="Cascade" destinationEntity="ShipModel" inverseName="player" inverseEntity="ShipModel" syncable="YES"/>
+        <relationship name="wonGame" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="GameModel" inverseName="winner" inverseEntity="GameModel" syncable="YES"/>
     </entity>
-    <entity name="Ship" representedClassName=".Ship" syncable="YES" codeGenerationType="class">
+    <entity name="ShipModel" representedClassName=".ShipModel" syncable="YES" codeGenerationType="class">
         <attribute name="deathReason" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="directionRaw" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="disabledTurns" optional="YES" attributeType="Integer 32" minValueString="0" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
@@ -33,12 +40,14 @@
         <attribute name="stateRaw" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="velocityX" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="velocityY" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
-        <relationship name="owner" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PlayerInfo" inverseName="ships" inverseEntity="PlayerInfo" syncable="YES"/>
+        <relationship name="orbitAround" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="BoardObjectModel" inverseName="inOrbit" inverseEntity="BoardObjectModel" syncable="YES"/>
+        <relationship name="player" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PlayerModel" inverseName="ships" inverseEntity="PlayerModel" syncable="YES"/>
+        <relationship name="raceGoals" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="BoardObjectModel" inverseName="needForRace" inverseEntity="BoardObjectModel" syncable="YES"/>
     </entity>
     <elements>
-        <element name="BoardObject" positionX="-63" positionY="90" width="128" height="150"/>
-        <element name="Game" positionX="-63" positionY="99" width="128" height="75"/>
-        <element name="PlayerInfo" positionX="-63" positionY="-18" width="128" height="120"/>
-        <element name="Ship" positionX="-54" positionY="0" width="128" height="240"/>
+        <element name="BoardObjectModel" positionX="-63" positionY="90" width="128" height="180"/>
+        <element name="GameModel" positionX="-63" positionY="99" width="128" height="120"/>
+        <element name="PlayerModel" positionX="-63" positionY="-18" width="128" height="150"/>
+        <element name="ShipModel" positionX="-54" positionY="0" width="128" height="270"/>
     </elements>
 </model>

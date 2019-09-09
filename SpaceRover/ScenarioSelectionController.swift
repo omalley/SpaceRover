@@ -9,26 +9,6 @@
 import CoreData
 import UIKit
 
-enum Scenario: Int {
-  case RACE_CLASSIC = 0, RACE_RANDOM = 1;
-}
-
-extension Scenario {
-
-  static func count() -> Int {
-    return 2
-  }
-
-  func name() -> String {
-    switch (self) {
-    case .RACE_CLASSIC:
-      return "Race - Classic Map"
-    case .RACE_RANDOM:
-      return "Race - Random Map"
-    }
-  }
-}
-
 class ScenarioSelectionController: UIViewController, UITableViewDataSource,
 UIPickerViewDelegate, UIPickerViewDataSource {
 
@@ -49,7 +29,7 @@ UIPickerViewDelegate, UIPickerViewDataSource {
     return delegate?.persistentContainer.viewContext
   }()
 
-  var players = [PlayerInfo]()
+  var players = [Player]()
 
   override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
     if let game = segue.destination as? GameViewController {
@@ -91,7 +71,6 @@ UIPickerViewDelegate, UIPickerViewDataSource {
     if let sourceController = sender.source as? PlayerEntryController,
       let player = sourceController.getPlayerInfo(context: context!) {
 
-      player.turn = Int32(players.count)
       players.append(player)
       save(context: context!)
       
@@ -109,11 +88,6 @@ UIPickerViewDelegate, UIPickerViewDataSource {
       let player = players[indexPath.row]
       context?.delete(player)
       players.remove(at: indexPath.row)
-      var turn = 0
-      for other in players {
-        other.turn = Int32(turn)
-        turn += 1
-      }
       save(context: context!)
 
       // delete the table view row
@@ -136,16 +110,20 @@ UIPickerViewDelegate, UIPickerViewDataSource {
   // The data to return for the row and component (column) that's being passed in
   func pickerView(_ pickerView: UIPickerView, titleForRow row: Int,
                   forComponent component: Int) -> String? {
-    return Scenario(rawValue: row)!.name()
+    return Scenario(rawValue: Int16(row))!.name()
   }
 
-  func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-    pickedScenario = Scenario(rawValue: row)!
+  func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int,
+                  inComponent component: Int) {
+    pickedScenario = Scenario(rawValue: Int16(row))!
   }
 
   func loadPlayers() {
     do {
-      players = try context!.fetch(PlayerInfo.fetchRequest())
+      let request: NSFetchRequest<PlayerModel> = PlayerModel.fetchRequest()
+      let inPlayerOrder = NSSortDescriptor(key: "playerOrder", ascending: true)
+      request.sortDescriptors = [inPlayerOrder]
+      players = try context!.fetch(request)
     } catch let error as NSError {
       fatalError("Error loading players: \(error), \(error.userInfo)")
     }

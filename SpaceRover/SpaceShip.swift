@@ -9,7 +9,7 @@
 import SpriteKit
 
 enum SpaceshipColor: Int16 {
-  case blue,red,green,purple,orange,yellow;
+  case blue = 0,red,green,purple,orange,yellow;
 }
 
 extension SpaceshipColor {
@@ -53,6 +53,106 @@ extension SpaceshipColor {
   }
 }
 
+enum ShipState: Int16 {
+  case Landed = 0, Orbit, Flight, Destroyed;
+}
+
+/**
+ * Adding accessors to the CoreData class.
+ */
+extension ShipModel {
+  var direction: HexDirection? {
+    get {
+      return HexDirection(rawValue: directionRaw)
+    }
+    set(value) {
+      directionRaw = value!.rawValue
+    }
+  }
+
+  var state: ShipState? {
+    get {
+      return ShipState(rawValue: stateRaw)
+    }
+    set(value) {
+      stateRaw = value!.rawValue
+    }
+  }
+
+  var position: SlantPoint {
+    get {
+      return SlantPoint(x: Int(positionX), y: Int(positionY))
+    }
+    set(value) {
+      positionX = Int32(value.x)
+      positionY = Int32(value.y)
+    }
+  }
+
+  var velocity: SlantPoint {
+    get {
+      return SlantPoint(x: Int(velocityX), y: Int(velocityY))
+    }
+    set(value) {
+      velocityX = Int32(value.x)
+      velocityY = Int32(value.y)
+    }
+  }
+
+  func move() {
+    positionX += velocityX
+    positionY += velocityY
+  }
+
+  func accelerate(_ acceleration: SlantPoint) {
+    velocityX += Int32(acceleration.x)
+    velocityY += Int32(acceleration.y)
+  }
+
+  func getInformation() -> String {
+    switch state! {
+    case .Landed:
+      return "\(name!)\nFuel: \(fuel)\nOn \(orbitAround!)"
+    case .Destroyed:
+      return "\(name!)\ndestroyed"
+    case .Orbit:
+      return "\(name!)\nFuel: \(fuel)\n\(orbitAround!) orbit"
+    case .Flight:
+      if (disabledTurns > 0) {
+        return "\(name!)\nFuel: \(fuel)\nDisabled: \(disabledTurns)"
+      } else {
+        return "\(name!)\nFuel: \(fuel)\nSpeed: \(velocity.magnitude())"
+      }
+    }
+  }
+
+  /**
+   * Mark the ship as landed on the given planet.
+   */
+  func landOn(planet: BoardObjectModel) {
+    state = .Landed
+    fuel = fuelCapacity
+    positionX = planet.positionX
+    positionY = planet.positionY
+    velocityX = 0
+    velocityY = 0
+    orbitAround = planet
+  }
+
+  func crash(reason: String) {
+    state = .Destroyed
+    deathReason = reason
+  }
+
+  func launchFrom(planet: BoardObjectModel,
+                  direction: HexDirection) {
+    state = .Flight
+    orbitAround = nil
+    position = planet.toSlant() + direction.toSlant()
+    velocity = direction.invert().toSlant()
+  }
+}
+
 let shipContactMask: UInt32 = 1
 let planetContactMask: UInt32 = 2
 let gravityContactMask: UInt32 = 4
@@ -81,51 +181,33 @@ let UiFontName = "Copperplate"
  * Returns 1 to 6 inclusive
  */
 func rollDie() -> Int {
-  return 1 + Int(arc4random_uniform(6))
+  return nextRandom(min: 1, max: 6)
 }
 
 class SpaceShip: SKSpriteNode {
   let tileMap: SKTileMapNode
-  let player: PlayerInfo
-  let fuelCapacity = 20
+  let player: Player
   let turnIndicator: SKSpriteNode
   var arrows : DirectionKeypad?
-
-  var slant: SlantPoint
-  var velocity: SlantPoint
-  var direction = HexDirection.NorthEast
-  var fuel: Int
   var watcher: ShipInformationWatcher?
+
+  var model: ShipModel
   var orbitAround: Planet?
-  var hasLanded = false
-  var isDead = false
-  var turnsDisabled = 0
-  var deathReason: String?
+
   // We need to count how many half gravity wells this ship has hit this turn, because
   // every other half gravity is optional.
   var halfGravityHits = 0
 
-  convenience init(name: String, on: Planet, tiles: SKTileMapNode, color: SpaceshipColor,
-                   player: PlayerInfo) {
-    self.init(name: name, slant: on.slant, tiles: tiles, color: color, player: player)
-    orbitAround = on
-    hasLanded = true
-    arrows?.setLaunchButtons(planet: on)
-  }
-
-  init (name: String, slant: SlantPoint, tiles: SKTileMapNode, color: SpaceshipColor,
-        player: PlayerInfo) {
+  init (model: ShipModel, player: Player, tiles: SKTileMapNode) {
     tileMap = tiles
-    self.slant = slant
+    self.model = model
     self.player = player
-    velocity = SlantPoint(x: 0, y: 0)
-    let texture = color.image()
-    fuel = fuelCapacity
+    let texture = player.model.color!.image()
     let turnIndicatorTexture = SKTexture(imageNamed: "CurrentTurnIndicator")
     turnIndicator = SKSpriteNode(texture: turnIndicatorTexture)
     super.init(texture: texture, color: UIColor.clear, size: texture.size())
     self.name = name
-    position = slantToView(slant, tiles: tileMap)
+    position = slantToView(model.position, tiles: tileMap)
     tileMap.addChild(self)
     arrows = DirectionKeypad(ship: self)
     arrows!.position = self.position
@@ -135,7 +217,8 @@ class SpaceShip: SKSpriteNode {
     zPosition = 20
     physicsBody = SKPhysicsBody(circleOfRadius: 5)
     physicsBody?.categoryBitMask = shipContactMask
-    physicsBody?.contactTestBitMask = planetContactMask | gravityContactMask | asteroidsContactMask
+    physicsBody?.contactTestBitMask =
+      planetContactMask | gravityContactMask | asteroidsContactMask
     physicsBody?.collisionBitMask = 0
     arrows?.detectOverlap()
   }
@@ -146,17 +229,17 @@ class SpaceShip: SKSpriteNode {
 
   func setWatcher(_ newWatcher: ShipInformationWatcher?) {
     watcher = newWatcher
-    watcher?.updateShipInformation(getInformation())
+    watcher?.updateShipInformation(model.getInformation())
   }
 
   func getAccellerationPosition(direction: HexDirection) -> CGPoint {
-    let newVelocity = velocity + direction.toSlant()
-    let newPosition = slant + newVelocity
+    let newVelocity = model.velocity + direction.toSlant()
+    let newPosition = model.position + newVelocity
     return slantToView(newPosition, tiles: tileMap)
   }
 
   func enterGravity(_ gravity: GravityArrow) {
-    if (!hasLanded) {
+    if (model.state! != .Landed) {
       print("\(self.name!) hit \(gravity.name!)")
       switch gravity.strength {
       case .Full:
@@ -175,7 +258,7 @@ class SpaceShip: SKSpriteNode {
   }
 
   func accelerateShip(direction: HexDirection) {
-    velocity = velocity + direction.toSlant()
+    model.accelerate(direction.toSlant())
     moveAccArrows()
   }
 
@@ -185,6 +268,7 @@ class SpaceShip: SKSpriteNode {
         // Is the velocity 60 degrees from the gravity?
         let clockwise = gravity.direction.clockwise(turns: 1).toSlant()
         let counterClockwise = gravity.direction.clockwise(turns: -1).toSlant()
+        let velocity = model.velocity
         if velocity == clockwise || velocity == counterClockwise {
           orbitAround = gravity.planet
           return
@@ -195,8 +279,8 @@ class SpaceShip: SKSpriteNode {
   }
 
   func rotateShip (_ newDirection : HexDirection) {
-    if newDirection != direction && newDirection != HexDirection.NoAcc {
-      var rotateBy = (newDirection.rotateAngle() - direction.rotateAngle())
+    if newDirection != HexDirection.NoAcc && newDirection != model.direction {
+      var rotateBy = (newDirection.rotateAngle() - model.direction!.rotateAngle())
       if (rotateBy >= 0) {
         while (rotateBy > Double.pi) {
           rotateBy -= 2*Double.pi
@@ -206,29 +290,16 @@ class SpaceShip: SKSpriteNode {
           rotateBy += 2*Double.pi
         }
       }
-      direction = newDirection
+      model.direction = newDirection
       self.run(SKAction.rotate(byAngle: CGFloat(rotateBy), duration: 0.5))
     }
   }
 
-  func getInformation() -> String {
-    if let planet = orbitAround {
-      if hasLanded {
-        return "\(name!)\nFuel: \(fuel)\nOn \(planet.name!)"
-      } else {
-        return "\(name!)\nFuel: \(fuel)\n\(planet.name!) orbit"
-      }
-    } else if turnsDisabled != 0 {
-      return "\(name!)\nFuel: \(fuel)\nDisabled: \(turnsDisabled)"
-    } else {
-      return "\(name!)\nFuel: \(fuel)\nSpeed: \(velocity.magnitude())"
-    }
-  }
 
   func useFuel(_ units: Int) {
-    fuel -= units
+    model.fuel -= Int32(units)
     calculateOrbit()
-    if (fuel == 0) {
+    if (model.fuel == 0) {
       arrows?.disable()
       //"We're outta gas sir."
     }
@@ -237,22 +308,25 @@ class SpaceShip: SKSpriteNode {
   func moveAccArrows(){
     arrows?.removeAllActions()
     arrows?.run(
-        SKAction.move(to: getAccellerationPosition(direction: HexDirection.NoAcc), duration: 1))
+        SKAction.move(to: getAccellerationPosition(direction: HexDirection.NoAcc),
+                      duration: 1))
   }
 
   func move() {
-    print("moving \(name!) by \(velocity)")
+    print("moving \(name!) by \(model.velocity)")
     halfGravityHits = 0
-    if !hasLanded {
+    if model.state != .Landed {
       arrows?.removeLandingButtons()
       watcher?.shipMoving(ship: self)
-      slant = slant + velocity
+      model.move()
+      let slant = model.position
       run(SKAction.move(to: slantToView(slant, tiles: tileMap), duration: 1))
       // if the player tries to hover over a planet, the gravity needs to pull them again
+      let velocity = model.velocity
       if velocity.x == 0 && velocity.y == 0 {
         for body in physicsBody!.allContactedBodies() {
           if let gravity = body.node as? GravityArrow {
-            velocity = gravity.direction.toSlant()
+            model.velocity = gravity.direction.toSlant()
           }
         }
       }
@@ -265,19 +339,19 @@ class SpaceShip: SKSpriteNode {
     print("start turn for \(name!)")
     arrows?.isHidden = false
     turnIndicator.isHidden = false
-    watcher?.updateShipInformation(getInformation())
+    watcher?.updateShipInformation(model.getInformation())
   }
 
   func endTurn() {
     watcher?.shipDoneMoving(ship: self)
-    if !hasLanded {
+    if model.state != .Landed {
       arrows?.detectOverlap()
     }
     arrows?.isHidden = true
     turnIndicator.isHidden = true
-    if (turnsDisabled > 0) {
-      turnsDisabled -= 1
-      if(turnsDisabled == 0) {
+    if (model.disabledTurns > 0) {
+      model.disabledTurns -= 1
+      if(model.disabledTurns == 0) {
         arrows?.reenable()
       }
     }
@@ -286,13 +360,9 @@ class SpaceShip: SKSpriteNode {
   
   func landOn(planet: Planet) {
     print("Land \(name!) on \(planet.name!)")
-    hasLanded = true
-    fuel = fuelCapacity
-    slant = planet.slant
-    position = planet.position
-    velocity = SlantPoint(x: 0, y: 0)
     arrows?.removeLandingButtons()
-    watcher?.updateShipInformation(getInformation())
+    model.landOn(planet: planet.model)
+    watcher?.updateShipInformation(model.getInformation())
     moveAccArrows()
     arrows?.setLaunchButtons(planet: planet)
     watcher?.shipMoving(ship: self)
@@ -300,22 +370,17 @@ class SpaceShip: SKSpriteNode {
 
   func launch(planet: Planet, direction: HexDirection) {
     print("Launching \(name!) from \(planet.name!)")
-    hasLanded = false
-    orbitAround = nil
-    slant = slant + direction.toSlant()
-    velocity = direction.invert().toSlant()
-    position = slantToView(slant, tiles: tileMap)
+    model.launchFrom(planet: planet.model, direction: direction)
+    position = slantToView(model.position, tiles: tileMap)
     arrows?.removeLandingButtons()
-    arrows?.position = slantToView(slant + velocity, tiles: tileMap)
+    arrows?.position = slantToView(model.position + model.velocity, tiles: tileMap)
     arrows?.detectOverlap()
     watcher?.shipMoving(ship: self)
   }
   
   func crash(reason: String) {
-    isDead = true
-    isHidden = true
+    model.crash(reason: reason)
     arrows?.isHidden = true
-    deathReason = reason
     watcher?.crash(ship: self)
   }
 
@@ -324,18 +389,18 @@ class SpaceShip: SKSpriteNode {
    */
   func disable(turns: Int)  {
     print("Disabled for \(turns) turns")
-    if turnsDisabled == 0 {
+    if model.disabledTurns == 0 {
       arrows?.disable()
-      turnsDisabled = 1
+      model.disabledTurns = 1
     }
-    turnsDisabled += turns
-    if turnsDisabled == 6 {
+    model.disabledTurns += Int32(turns)
+    if model.disabledTurns >= 6 {
       self.crash(reason: " Your ship,  \(name!), burned up in the Asteroid Fields!")
     }
   }
 
   func enterAsteroids(_ asteroid: Asteroid) {
-    if velocity.magnitude() > 1 {
+    if model.velocity.magnitude() > 1 {
       print("\(name!) entered \(asteroid.name!)")
       let die = rollDie()
       print("Rolled a \(die)")
@@ -480,7 +545,7 @@ class DirectionArrow: SKSpriteNode{
     if let dirKeypad = parent as? DirectionKeypad {
       for body in physicsBody!.allContactedBodies() {
         if let planet = body.node as? Planet {
-          if ship.orbitAround == planet && planet.isLandable {
+          if ship.orbitAround == planet && planet.model.isLandable {
             dirKeypad.addChild(LandButton(arrow: self, planet: planet))
           } else {
             dirKeypad.addChild(CrashButton(arrow: self, planet: planet))

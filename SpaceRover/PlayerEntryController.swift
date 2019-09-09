@@ -49,8 +49,8 @@ class PlayerEntryController: UIViewController, UIPickerViewDelegate, UIPickerVie
     dismiss(animated: true, completion: nil)
   }
 
-  func getPlayerInfo(context: NSManagedObjectContext) -> PlayerInfo? {
-    let result = PlayerInfo(context: context)
+  func getPlayerInfo(context: NSManagedObjectContext) -> PlayerModel? {
+    let result = PlayerModel(context: context)
     result.name = playerName.text
     result.shipName = shipName.text
     result.color = pickedColor

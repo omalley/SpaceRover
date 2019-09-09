@@ -96,7 +96,7 @@ struct SlantPoint: Equatable {
   }
 }
 
-enum HexDirection: Int {
+enum HexDirection: Int16 {
   case NoAcc, West, NorthWest, NorthEast, East, SouthEast, SouthWest;
 }
 
@@ -108,7 +108,7 @@ extension HexDirection {
   }
 
   struct HexDirectionGenerator: IteratorProtocol {
-    var currentSection = 0
+    var currentSection: Int16 = 0
 
     mutating func next() -> HexDirection? {
       guard let item = HexDirection(rawValue:currentSection) else {
@@ -142,7 +142,7 @@ extension HexDirection {
     if (self == .NoAcc) {
       return .NoAcc
     } else {
-      var newValue = ((self.rawValue - 1) + turns) % 6
+      var newValue = Int16(((Int(self.rawValue) - 1) + turns) % 6)
       if (newValue < 0) {
         newValue += 6
       }

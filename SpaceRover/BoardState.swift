@@ -9,14 +9,6 @@
 import CoreData
 import Foundation
 
-enum GravityStrength: Int16 {
-  case None=0, Half, Full
-}
-
-enum ObjectKind: Int16 {
-  case Star=0, Planet, Moon, Asteroid
-}
-
 /**
  * Generate a random number between min and max inclusive.
  */
@@ -35,39 +27,14 @@ struct PlanetInformation {
   let orbitDistance: Double
 }
 
-extension BoardObject {
-
-  var kind: ObjectKind? {
-    get {
-      return ObjectKind(rawValue: kindRaw)
-    }
-    set(value) {
-      kindRaw = value!.rawValue
-    }
-  }
-
-  var gravity: GravityStrength? {
-    get {
-      return GravityStrength(rawValue: gravityRaw)
-    }
-    set(value) {
-      gravityRaw = value!.rawValue
-    }
-  }
-
-  func toSlant() -> SlantPoint {
-    return SlantPoint(x: Int(positionX), y: Int(positionY))
-  }
-}
-
 class BoardState {
   private let width: Int
   private let height: Int
   private let context: NSManagedObjectContext
   private let system: SystemDescription
-  private var planetElement = [String: BoardObject]()
+  private var planetElement = [String: BoardObjectModel]()
 
-  var elements = [BoardObject]()
+  var elements = [BoardObjectModel]()
 
   init(width: Int, height: Int,
        context: NSManagedObjectContext,
@@ -76,12 +43,11 @@ class BoardState {
     self.height = height
     self.context = context
     self.system = system
-    print("Size = \(width) x \(height)")
   }
 
   func load() {
     do {
-      elements = try context.fetch(BoardObject.fetchRequest())
+      elements = try context.fetch(BoardObjectModel.fetchRequest())
       planetElement.removeAll()
       for elem in elements {
         if let name = elem.name {
@@ -102,7 +68,7 @@ class BoardState {
   }
 
   func addPlanet(_ info: PlanetInformation, x: Int, y: Int) {
-    let planet = BoardObject(context: context)
+    let planet = BoardObjectModel(context: context)
     planet.name = info.name
     planet.kind = info.kind
     planet.gravity = info.gravity
@@ -115,7 +81,7 @@ class BoardState {
   }
 
   func addAsteroid(x: Int, y: Int) {
-    let asteroid = BoardObject(context: context)
+    let asteroid = BoardObjectModel(context: context)
     asteroid.kind = .Asteroid
     asteroid.positionX = Int32(x)
     asteroid.positionY = Int32(y)

@@ -9,10 +9,6 @@
 import UIKit
 import SpriteKit
 
-enum GameState {
-  case NOT_STARTED, IN_PROGRESS, FINISHED
-}
-
 class PlayerNotification {
   let view: GameViewController
   let ship: SpaceShip
@@ -34,7 +30,7 @@ class PlayerNotification {
 class ShipCrashNotification: PlayerNotification {
   override func present() {
     let alert = UIAlertController(title:"Ship \(ship.name!) destroyed!",
-      message: ship.deathReason!, preferredStyle: .alert)
+      message: ship.model.deathReason!, preferredStyle: .alert)
     let alertAction = UIAlertAction(title: "Okay", style: .default, handler: {_ in
       if self.view.roverScene!.turnState == TurnState.GAME_OVER {
         self.view.endGame(self.view.roverScene!)
@@ -71,7 +67,7 @@ class HalfGravityQuestion: PlayerNotification {
 class GameViewController: UIViewController, ShipInformationWatcher {
 
   var roverScene: GameScene?
-  var players: [PlayerInfo]?
+  var players: [PlayerModel]?
   var state = GameState.NOT_STARTED
   var randomMap = false
   var notificationList = [PlayerNotification]()
@@ -84,7 +80,8 @@ class GameViewController: UIViewController, ShipInformationWatcher {
     let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
     if let rover = roverScene {
       for (name, planet) in rover.planets {
-        if planet.kind == .Star || planet.kind == .Planet {
+        let kind = planet.model.kind!
+        if kind == .Star || kind == .Planet {
           alert.addAction(UIAlertAction(title: name, style: .default) {
             _ in self.roverScene!.moveTo(planet)
           })
@@ -99,7 +96,7 @@ class GameViewController: UIViewController, ShipInformationWatcher {
     let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
     if let rover = roverScene {
       for player in rover.players {
-        if !player.ship.isDead {
+        if player.ship.model.state != .Destroyed {
           alert.addAction(UIAlertAction(title: player.info.shipName, style: .default) {
             _ in self.roverScene!.moveTo(player.ship)
           })

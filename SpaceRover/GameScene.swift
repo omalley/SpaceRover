@@ -8,18 +8,7 @@
 
 import SpriteKit
 
-class Player {
-  let ship: SpaceShip
-  let info: PlayerInfo
-
-  init(_ description: PlayerInfo, on: Planet) {
-    info = description
-    ship = SpaceShip(name: info.shipName!, on: on, tiles: on.parent as! SKTileMapNode,
-                     color: info.color!, player: info)
-  }
-}
-
-enum TurnState: Int16 {
+enum TurnState {
   case WAITING_FOR_DIRECTION, MOVING, TURN_DONE, GAME_OVER
 }
 
@@ -33,7 +22,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   var watcher: ShipInformationWatcher?
   var planets = [String: Planet]()
   var turns = 0
-  var winner: PlayerInfo?
+  var winner: PlayerModel?
   var randomMap = false
 
   // map from the player's name to the list of planets they still need to reach
@@ -66,12 +55,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     for obj in board.elements {
       switch obj.kind! {
       case .Asteroid:
-        tileMap?.addChild(Asteroid(slant: obj.toSlant(), tiles: tileMap!))
+        tileMap?.addChild(Asteroid(model: obj, tiles: tileMap!))
       case .Planet, .Moon, .Star:
-        let planet = Planet(name: obj.name!, slant: obj.toSlant(),
-                            tiles: tileMap!, radius: obj.radius,
-                            landable: obj.isLandable, gravity: obj.gravity!,
-                            kind: obj.kind!)
+        let planet = Planet(model: obj, tiles: tileMap!)
         tileMap?.addChild(planet)
         planets[obj.name!] = planet
       }
@@ -81,7 +67,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     physicsWorld.contactDelegate = self
   }
 
-  func startGame(watcher: ShipInformationWatcher?, names: [PlayerInfo]) {
+  func startGame(watcher: ShipInformationWatcher?, names: [PlayerModel]) {
     nextPlayer = 0
     self.watcher = watcher
     let earth = planets["Earth"]
@@ -93,7 +79,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
       players.append(player)
       remainingPlanets[name.name!] = Set<Planet>()
       for (_, planet) in planets {
-        if planet.gravity == GravityStrength.Full {
+        if planet.model.gravity == GravityStrength.Full {
           remainingPlanets[name.name!]?.insert(planet)
         }
       }
@@ -102,7 +88,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     livePlayers = players.count
     players[nextPlayer].ship.startTurn()
     turns = 1
-    watcher?.startTurn(player: players[nextPlayer].info.name!)
+    watcher?.startTurn(player: players[nextPlayer].model.name!)
   }
 
   let PAN_SLOWDOWN: CGFloat = 20.0
@@ -139,13 +125,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     if turnState == TurnState.TURN_DONE {
       for i in 1 ... players.count {
         let candidate = (nextPlayer + i) % players.count
-        if !players[candidate].ship.isDead {
+        if !players[candidate].model.hasLost {
           if candidate <= nextPlayer {
             turns += 1
           }
           nextPlayer = candidate
           moveTo(players[nextPlayer].ship)
-          watcher?.startTurn(player: players[nextPlayer].info.name!)
+          watcher?.startTurn(player: players[nextPlayer].model.name!)
           players[nextPlayer].ship.startTurn()
           turnState = TurnState.WAITING_FOR_DIRECTION
           return
@@ -188,7 +174,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   }
 
   func shipDeath(ship: SpaceShip) {
-    print("Player \(ship.player.name!) died - \(ship.deathReason!)")
+    print("Player \(ship.player.model.name!) died - \(ship.model.deathReason!)")
     livePlayers -= 1
     if livePlayers == 0 {
       turnState = TurnState.GAME_OVER
@@ -198,11 +184,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   }
 
   func shipCollision(ship: SpaceShip, other: SKNode) {
-    if turnState == TurnState.MOVING && !ship.hasLanded {
+    if turnState == TurnState.MOVING && ship.model.state != .Landed {
       if let planet = other as? Planet {
         ship.crash(reason: "Ship \(ship.name!) crashed in to \(planet.name!)")
       } else if let gravity = other as? GravityArrow {
-        remainingPlanets[ship.player.name!]?.remove(gravity.planet)
+        remainingPlanets[ship.player.model.name!]?.remove(gravity.planet)
         ship.enterGravity(gravity)
       } else if let asteroid = other as? Asteroid {
         ship.enterAsteroids(asteroid)
