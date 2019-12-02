@@ -13,13 +13,13 @@ class GameEndController: UIViewController, UITableViewDataSource {
   @IBOutlet weak var winnerLabel: UILabel!
   @IBOutlet weak var playerTable: UITableView!
 
-  var gameState: GameScene?
+  var model: GameModel?
 
   /**
    * Scene is displayed, go ahead and start the game
    */
   override func viewDidLoad() {
-    winnerLabel.text = gameState?.getGameState()
+    winnerLabel.text = model?.getGameState()
     playerTable?.dataSource = self
   }
 
@@ -28,37 +28,14 @@ class GameEndController: UIViewController, UITableViewDataSource {
   }
 
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    return gameState!.players.count
-  }
-
-  func getRemainingPlanets(_ player: Player) -> String {
-    let remaining = gameState?.remainingPlanets[player.model.name!]
-    var result = ""
-    var first = true
-    for planet in remaining! {
-      if first {
-        first = false
-      } else {
-        result += ", "
-      }
-      result += planet.name!
-    }
-    return result
+    return model!.players!.count
   }
 
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
     let cell = tableView.dequeueReusableCell(withIdentifier: "gameEndPlayerInfo", for: indexPath)
-    let player = gameState!.players[indexPath.row]
-    cell.textLabel?.text = player.model.name
-    
-    switch player.model.state! {
-    case .Lost:
-      cell.detailTextLabel?.text = player.ship.model.deathReason!
-    case .Playing:
-      cell.detailTextLabel?.text = getRemainingPlanets(player)
-    case .Won:
-      cell.detailTextLabel?.text = "Winner"
-    }
+    let player = model!.playerList[indexPath.row]
+    cell.textLabel?.text = player.name
+    cell.detailTextLabel?.text = model?.getPlayerStatus(player)
     return cell
   }
   

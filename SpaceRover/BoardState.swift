@@ -25,166 +25,97 @@ struct PlanetInformation {
   let gravity: GravityStrength
   let orbiting: String?
   let orbitDistance: Double
+  // the location on the classic board
+  let classicLocation: SlantPoint
 }
 
-class BoardState {
+/**
+ * An interface to describe a solar system.
+ */
+protocol SolarSystemDescription {
+  var sun: PlanetInformation {get}
+  var planets: [PlanetInformation] {get}
+  var classicAsteroids: [SlantPoint] {get}
+
+  /**
+   * What is the probability that a hex the given distance to the sun has an asteroid?
+   * Returns a number from 0.0 to 1.0.
+   */
+  func asteroidProbability(_ distanceToSun: Double) -> Double;
+}
+
+class BoardFactory {
+  private let system: SolarSystemDescription
   private let width: Int
   private let height: Int
   private let context: NSManagedObjectContext
-  private let system: SystemDescription
-  private var planetElement = [String: BoardObjectModel]()
-
-  var elements = [BoardObjectModel]()
+  private let game: GameModel
+  private var planets = [String: BoardObjectModel]()
+  var raceGoals = Set<BoardObjectModel>()
 
   init(width: Int, height: Int,
        context: NSManagedObjectContext,
-       system: SystemDescription) {
+       system: SolarSystemDescription,
+       game: GameModel) {
     self.width = width
     self.height = height
     self.context = context
     self.system = system
+    self.game = game
   }
 
-  func load() {
-    do {
-      elements = try context.fetch(BoardObjectModel.fetchRequest())
-      planetElement.removeAll()
-      for elem in elements {
-        if let name = elem.name {
-          planetElement[name] = elem
-        }
-      }
-    } catch let error as NSError {
-      fatalError("Error loading board: \(error), \(error.userInfo)")
+  func build() {
+    clear()
+    switch game.scenario! {
+    case .RACE_CLASSIC:
+      classicLocations()
+    case .RACE_RANDOM:
+      randomizeLocations()
     }
+    save(context: context)
   }
 
   func clear() {
-    for elem in elements {
+    for elem in game.board!.allObjects as! [BoardObjectModel] {
       context.delete(elem)
     }
-    elements.removeAll()
-    planetElement.removeAll()
   }
 
-  func addPlanet(_ info: PlanetInformation, x: Int, y: Int) {
+  func classicLocations() {
+    for planet in system.planets {
+      addPlanet(planet, location: planet.classicLocation)
+    }
+    for asteroid in system.classicAsteroids {
+      addAsteroid(location: asteroid)
+    }
+  }
+
+  func addPlanet(_ info: PlanetInformation, location: SlantPoint) {
     let planet = BoardObjectModel(context: context)
     planet.name = info.name
     planet.kind = info.kind
     planet.gravity = info.gravity
     planet.isLandable = info.isLandable
     planet.radius = info.radius
-    planet.positionX = Int32(x)
-    planet.positionY = Int32(y)
-    elements.append(planet)
-    planetElement[info.name] = planet
+    planet.position = location
+    planet.game = game
+    planets[planet.name!] = planet
+    if planet.gravity == GravityStrength.Full {
+      raceGoals.insert(planet)
+    }
   }
 
-  func addAsteroid(x: Int, y: Int) {
+  func addAsteroid(location: SlantPoint) {
     let asteroid = BoardObjectModel(context: context)
     asteroid.kind = .Asteroid
-    asteroid.positionX = Int32(x)
-    asteroid.positionY = Int32(y)
+    asteroid.position = location
     asteroid.gravity = .None
     asteroid.isLandable = false
-    elements.append(asteroid)
+    asteroid.game = game
   }
 
-  func classicLocations() {
-    clear()
-
-    addPlanet(system.lookup(planet: "Sol")!, x:39, y:23)
-    addPlanet(system.lookup(planet: "Mercury")!, x:40, y:20)
-    addPlanet(system.lookup(planet: "Venus")!, x:31, y:19)
-    addPlanet(system.lookup(planet: "Earth")!,x:51, y:29)
-    addPlanet(system.lookup(planet: "Luna")!, x:54, y:30)
-    addPlanet(system.lookup(planet: "Mars")!, x:40, y:43)
-    addPlanet(system.lookup(planet: "Jupiter")!, x:59, y:59)
-    addPlanet(system.lookup(planet: "Io")!, x:59, y:57)
-    addPlanet(system.lookup(planet: "Ganymede")!, x:63, y:61)
-    addPlanet(system.lookup(planet: "Callisto")!, x:54, y:59)
-    addPlanet(system.lookup(planet: "Ceres")!, x:47, y:50)
-
-    addAsteroid(x: 47, y:41)
-    addAsteroid(x: 49, y:41)
-    addAsteroid(x: 46, y:42)
-    addAsteroid(x: 50, y:42)
-    addAsteroid(x: 53, y:42)
-    addAsteroid(x: 55, y:42)
-    addAsteroid(x: 56, y:42)
-    addAsteroid(x: 48, y:43)
-    addAsteroid(x: 50, y:43)
-    addAsteroid(x: 53, y:43)
-    addAsteroid(x: 56, y:43)
-    addAsteroid(x: 59, y:43)
-    addAsteroid(x: 65, y:43)
-    addAsteroid(x: 46, y:44)
-    addAsteroid(x: 50, y:44)
-    addAsteroid(x: 51, y:44)
-    addAsteroid(x: 54, y:44)
-    addAsteroid(x: 57, y:44)
-    addAsteroid(x: 59, y:44)
-    addAsteroid(x: 61, y:44)
-    addAsteroid(x: 65, y:44)
-    addAsteroid(x: 66, y:44)
-    addAsteroid(x: 37, y:45)
-    addAsteroid(x: 48, y:45)
-    addAsteroid(x: 51, y:45)
-    addAsteroid(x: 52, y:45)
-    addAsteroid(x: 53, y:45)
-    addAsteroid(x: 55, y:45)
-    addAsteroid(x: 65, y:45)
-    addAsteroid(x: 68, y:45)
-    addAsteroid(x: 69, y:45)
-    addAsteroid(x: 36, y:46)
-    addAsteroid(x: 37, y:46)
-    addAsteroid(x: 38, y:46)
-    addAsteroid(x: 47, y:46)
-    addAsteroid(x: 49, y:46)
-    addAsteroid(x: 59, y:46)
-    addAsteroid(x: 62, y:46)
-    addAsteroid(x: 67, y:46)
-    addAsteroid(x: 38, y:47)
-    addAsteroid(x: 52, y:47)
-    addAsteroid(x: 55, y:47)
-    addAsteroid(x: 57, y:47)
-    addAsteroid(x: 59, y:47)
-    addAsteroid(x: 60, y:47)
-    addAsteroid(x: 62, y:47)
-    addAsteroid(x: 63, y:47)
-    addAsteroid(x: 65, y:47)
-    addAsteroid(x: 39, y:48)
-    addAsteroid(x: 41, y:48)
-    addAsteroid(x: 42, y:48)
-    addAsteroid(x: 57, y:48)
-    addAsteroid(x: 62, y:48)
-    addAsteroid(x: 64, y:48)
-    addAsteroid(x: 65, y:48)
-    addAsteroid(x: 68, y:48)
-    addAsteroid(x: 68, y:48)
-    addAsteroid(x: 69, y:48)
-    addAsteroid(x: 70, y:48)
-    addAsteroid(x: 43, y:49)
-    addAsteroid(x: 45, y:49)
-    addAsteroid(x: 48, y:49)
-    addAsteroid(x: 60, y:49)
-    addAsteroid(x: 63, y:49)
-    addAsteroid(x: 64, y:49)
-    addAsteroid(x: 67, y:49)
-    addAsteroid(x: 38, y:50)
-    addAsteroid(x: 39, y:50)
-    addAsteroid(x: 41, y:50)
-    addAsteroid(x: 59, y:50)
-    addAsteroid(x: 40, y:51)
-    addAsteroid(x: 39, y:52)
-    addAsteroid(x: 40, y:52)
-    save(context: context)
-    printPlanetDistances()
-  }
-
-  func setRandom(maxX: Int, maxY: Int) {
-    clear()
-    save(context: context)
+  func lookup(name: String) -> BoardObjectModel {
+    return planets[name]!
   }
 
   func pickLocation(origin: SlantPoint, distance: Double) -> SlantPoint {
@@ -204,46 +135,23 @@ class BoardState {
   }
 
   func randomizeLocations(){
-    clear()
-    for planetInfo in system.planetInformation {
-      var spLoc : SlantPoint?
+    let sunLocation = system.sun.classicLocation
+    for planetInfo in system.planets {
+      var spLoc = sunLocation
       if let orbiting = planetInfo.orbiting {
-        let parent = planetElement[orbiting]!.toSlant()
+        let parent = planets[orbiting]!.position
         print("Pick location of \(planetInfo.name) relative to \(orbiting) at \(parent)")
         spLoc = pickLocation(origin: parent, distance: planetInfo.orbitDistance)
-      } else {
-        spLoc = sunLocation
       }
-      addPlanet(planetInfo, x: spLoc!.x, y: spLoc!.y)
+      addPlanet(planetInfo, location: spLoc)
     }
-    createRandomAsteroids()
-    save(context: context)
-    printPlanetDistances()
-  }
-
-  // the earth orbit radius in points
-  let AuDistance = 10.0
-  let sunLocation = SlantPoint(x:39, y:23)
-
-  private func createRandomAsteroids() {
     for row in 0 ... height {
       for column in 0 ... width {
         let slant = AppleHex(column: column, row: row).toSlantPoint()
-        if system.hasAsteroids(distance: slant.distance(sunLocation)) {
-          addAsteroid(x: slant.x, y: slant.y)
+        if Int(system.asteroidProbability(slant.distance(sunLocation)) * 1000)
+            >=  nextRandom(min: 0, max: 999){
+          addAsteroid(location: slant)
         }
-      }
-    }
-  }
-
-  func printPlanetDistances() {
-    for planet in system.planetInformation {
-      if let orbits = planet.orbiting {
-        let distance = planetElement[orbits]!.toSlant().distance(
-          planetElement[planet.name]!.toSlant())
-        print("\(planet.name) = \(distance) ")
-      } else {
-        print("\(planet.name) = 0 ")
       }
     }
   }
@@ -253,87 +161,150 @@ class BoardState {
  * This class describes how the solar system is laid out for generating
  * random boards.
  */
-class SystemDescription {
-  static let SOL = "Sol"
-  static let EARTH = "Earth"
-  static let JUPITER = "Jupiter"
+class SolDescription: SolarSystemDescription {
+  private static let SOL = "Sol"
+  private static let EARTH = "Earth"
+  private static let JUPITER = "Jupiter"
+  private static let AU_DISTANCE = 10.0
 
   /**
    * The primary information for the planets.
    * The landable property is set for the race scenario and all of the
    * distances are measured in hexes (center to center of adjacent hexes).
    *
-   * We've used 1 hex = million km for the planet orbit radiuses. The moon
+   * We've used 1 hex = 15 million km for the planet orbit radiuses. The moon
    * orbits are modelled at 100x the planet orbits so that they aren't in the
    * same hex as their primary.
    */
-  let planetInformation: [PlanetInformation] = [
+  let planets: [PlanetInformation] = [
     PlanetInformation(name: SOL, kind: .Star, radius:0.5, isLandable: false,
-                      gravity: .Full, orbiting: nil, orbitDistance: 0),
+                      gravity: .Full, orbiting: nil, orbitDistance: 0,
+                      classicLocation: SlantPoint(x:39, y:23)),
 
     // Planets
     PlanetInformation(name: "Mercury", kind: .Planet, radius: 0.14,
                       isLandable: false, gravity: .Full, orbiting: SOL,
-                      orbitDistance: 3.9), // 57.91 million km
+                      orbitDistance: 3.9,  // 57.91 million km
+                      classicLocation: SlantPoint(x:40, y:20)),
     PlanetInformation(name: "Venus", kind: .Planet, radius: 0.24,
                       isLandable: true, gravity: .Full, orbiting: SOL,
-                      orbitDistance: 7.2), // 108.2 million km
+                      orbitDistance: 7.2, // 108.2 million km
+                      classicLocation: SlantPoint(x:31, y:19)),
     PlanetInformation(name: EARTH, kind: .Planet, radius: 0.25,
                       isLandable: true, gravity:.Full, orbiting: SOL,
-                      orbitDistance: 10.0), // 149.6 million km
+                      orbitDistance: AU_DISTANCE, // 149.6 million km
+                      classicLocation: SlantPoint(x:51, y:29)),
     PlanetInformation(name: "Mars", kind: .Planet, radius: 0.20,
                       isLandable: true, gravity: .Full, orbiting: SOL,
-                      orbitDistance:15.2), // 227.9 million km
+                      orbitDistance:15.2, // 227.9 million km
+                      classicLocation: SlantPoint(x:40, y:43)),
     PlanetInformation(name: JUPITER, kind: .Planet, radius: 0.45,
                       isLandable: false, gravity:.Full, orbiting: SOL,
-                      orbitDistance: 51.9), // 778.5 million km
+                      orbitDistance: 51.9, // 778.5 million km
+                      classicLocation: SlantPoint(x:59, y:59)),
     PlanetInformation(name: "Ceres", kind: .Planet, radius: 0.12,
                       isLandable: false, gravity: .None, orbiting: SOL,
-                      orbitDistance: 27.5), // 413 million km
+                      orbitDistance: 27.5, // 413 million km
+                      classicLocation: SlantPoint(x:47, y:50)),
 
     // Earth moon
     PlanetInformation(name: "Luna", kind: .Moon, radius: 0.1, isLandable:false,
                       gravity: .Half, orbiting: EARTH,
-                      orbitDistance: 2.56), //  0.384 million km
+                      orbitDistance: 2.56, //  0.384 million km
+                      classicLocation: SlantPoint(x:54, y:30)),
 
     // Jupiter moons
     PlanetInformation(name: "Io", kind: .Moon, radius: 0.1, isLandable: false,
                       gravity: .Half, orbiting: JUPITER,
-                      orbitDistance: 2.81), // 0.422 million km
+                      orbitDistance: 2.81, // 0.422 million km
+                      classicLocation: SlantPoint(x:59, y:57)),
     PlanetInformation(name: "Ganymede", kind: .Moon, radius: 0.1,
                       isLandable: false, gravity: .Full, orbiting: JUPITER,
-                      orbitDistance: 7.13), // 1.070 million km
+                      orbitDistance: 7.13, // 1.070 million km
+                      classicLocation: SlantPoint(x:63, y:61)),
     PlanetInformation(name: "Callisto", kind: .Moon, radius: 0.1,
                       isLandable: true, gravity: .Full, orbiting: JUPITER,
-                      orbitDistance: 12.55), // 1.883 million km
-
+                      orbitDistance: 12.55, // 1.883 million km
+                      classicLocation: SlantPoint(x:54, y:59))
   ]
 
-  private lazy var AU_DISTANCE: Double = {
-    lookup(planet: SystemDescription.EARTH)!.orbitDistance
-  }()
+  lazy var sun: PlanetInformation = { planets[0] }()
 
-  /**
-   * Does a hex at the given distance (in hexes) have asteroids?
-   */
-  func hasAsteroids(distance: Double) -> Bool {
-    let au = distance / AU_DISTANCE
-    if au < 2.0 || au >= 3.5 {
-      return false
-    }
-    let density = SystemDescription.asteroidDensity[Int((au - 2.0) *
-      Double(SystemDescription.asteroidDensity.count) / 1.5)]
-    return nextRandom(min: 0, max: 800) < density
-  }
-
-  func lookup(planet name: String) -> PlanetInformation? {
-    for planet in planetInformation {
-      if planet.name == name {
-        return planet
-      }
-    }
-    return nil
-  }
+  var classicAsteroids: [SlantPoint] = [
+    SlantPoint(x: 47, y:41),
+    SlantPoint(x: 49, y:41),
+    SlantPoint(x: 46, y:42),
+    SlantPoint(x: 50, y:42),
+    SlantPoint(x: 53, y:42),
+    SlantPoint(x: 55, y:42),
+    SlantPoint(x: 56, y:42),
+    SlantPoint(x: 48, y:43),
+    SlantPoint(x: 50, y:43),
+    SlantPoint(x: 53, y:43),
+    SlantPoint(x: 56, y:43),
+    SlantPoint(x: 59, y:43),
+    SlantPoint(x: 65, y:43),
+    SlantPoint(x: 46, y:44),
+    SlantPoint(x: 50, y:44),
+    SlantPoint(x: 51, y:44),
+    SlantPoint(x: 54, y:44),
+    SlantPoint(x: 57, y:44),
+    SlantPoint(x: 59, y:44),
+    SlantPoint(x: 61, y:44),
+    SlantPoint(x: 65, y:44),
+    SlantPoint(x: 66, y:44),
+    SlantPoint(x: 37, y:45),
+    SlantPoint(x: 48, y:45),
+    SlantPoint(x: 51, y:45),
+    SlantPoint(x: 52, y:45),
+    SlantPoint(x: 53, y:45),
+    SlantPoint(x: 55, y:45),
+    SlantPoint(x: 65, y:45),
+    SlantPoint(x: 68, y:45),
+    SlantPoint(x: 69, y:45),
+    SlantPoint(x: 36, y:46),
+    SlantPoint(x: 37, y:46),
+    SlantPoint(x: 38, y:46),
+    SlantPoint(x: 47, y:46),
+    SlantPoint(x: 49, y:46),
+    SlantPoint(x: 59, y:46),
+    SlantPoint(x: 62, y:46),
+    SlantPoint(x: 67, y:46),
+    SlantPoint(x: 38, y:47),
+    SlantPoint(x: 52, y:47),
+    SlantPoint(x: 55, y:47),
+    SlantPoint(x: 57, y:47),
+    SlantPoint(x: 59, y:47),
+    SlantPoint(x: 60, y:47),
+    SlantPoint(x: 62, y:47),
+    SlantPoint(x: 63, y:47),
+    SlantPoint(x: 65, y:47),
+    SlantPoint(x: 39, y:48),
+    SlantPoint(x: 41, y:48),
+    SlantPoint(x: 42, y:48),
+    SlantPoint(x: 57, y:48),
+    SlantPoint(x: 62, y:48),
+    SlantPoint(x: 64, y:48),
+    SlantPoint(x: 65, y:48),
+    SlantPoint(x: 68, y:48),
+    SlantPoint(x: 68, y:48),
+    SlantPoint(x: 69, y:48),
+    SlantPoint(x: 70, y:48),
+    SlantPoint(x: 43, y:49),
+    SlantPoint(x: 45, y:49),
+    SlantPoint(x: 48, y:49),
+    SlantPoint(x: 60, y:49),
+    SlantPoint(x: 63, y:49),
+    SlantPoint(x: 64, y:49),
+    SlantPoint(x: 67, y:49),
+    SlantPoint(x: 38, y:50),
+    SlantPoint(x: 39, y:50),
+    SlantPoint(x: 41, y:50),
+    SlantPoint(x: 59, y:50),
+    SlantPoint(x: 40, y:51),
+    SlantPoint(x: 39, y:52),
+    SlantPoint(x: 40, y:52),
+  ]
 
   /**
    * The density of asteroids by distance from the sun between 2.0 to 3.5 AU.
@@ -437,4 +408,14 @@ class SystemDescription {
     0,   0,   0,   0,   0,   2,   2,   0,   0,   0,   0,   0,   0,   0,
     0,   0,   0,   0,   0,   2,   2,   0,   0,   0,   0,   2,   0,   0,
     5,   2,   0,   0,   0]
+
+  func asteroidProbability(_ distanceToSun: Double) -> Double {
+    let au = distanceToSun / SolDescription.AU_DISTANCE
+    if au < 2.0 || au >= 3.5 {
+      return 0.0
+    }
+    let density = SolDescription.asteroidDensity[Int((au - 2.0) *
+      Double(SolDescription.asteroidDensity.count) / 1.5)]
+    return Double(density) / 800.0
+  }
 }

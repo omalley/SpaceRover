@@ -6,6 +6,7 @@
 //  Copyright (c) 2017 Hazen O'Malley. All rights reserved.
 //
 
+import CoreData
 import SpriteKit
 
 enum TurnState {
@@ -13,27 +14,19 @@ enum TurnState {
 }
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
+  var model: GameModel?
   // What part of the turn are we in?
   var turnState = TurnState.WAITING_FOR_DIRECTION
-  var players: [Player] = []
-  var nextPlayer: Int = 0
-  var livePlayers: Int = 0
-  var tileMap:SKTileMapNode?
+  var ships: [SpaceShip] = []
+  var nextShip: Int = 0
+  var liveShips: Int = 0
+  var tileMap: SKTileMapNode?
   var watcher: ShipInformationWatcher?
   var planets = [String: Planet]()
-  var turns = 0
-  var winner: PlayerModel?
-  var randomMap = false
 
-  // map from the player's name to the list of planets they still need to reach
-  var remainingPlanets = [String: Set<Planet>]()
-
-  lazy var board: BoardState = {
+  lazy var context: NSManagedObjectContext = {
     let delegate = UIApplication.shared.delegate as? AppDelegate
-    return BoardState(width: tileMap!.numberOfColumns,
-                      height: tileMap!.numberOfRows,
-                      context: delegate!.persistentContainer.viewContext,
-                      system: SystemDescription())
+    return delegate!.persistentContainer.viewContext
   }()
 
   override func didMove(to view: SKView) {
@@ -45,14 +38,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     tileMap?.isUserInteractionEnabled = true
 
-    if randomMap {
-      board.randomizeLocations()
-    } else {
-      board.classicLocations()
+    if model?.state == GameState.NOT_STARTED {
+      resetGameState()
+    }
+
+    liveShips = 0;
+    ships.removeAll()
+    for player in model!.playerList {
+      for ship in player.shipList {
+        ships.append(SpaceShip(model: ship, tiles: tileMap!))
+        if ship.state != ShipState.Destroyed {
+          liveShips += 1
+        }
+      }
     }
 
     // create the sprites for the board elements
-    for obj in board.elements {
+    planets.removeAll()
+    for obj in model?.board?.allObjects as! [BoardObjectModel] {
       switch obj.kind! {
       case .Asteroid:
         tileMap?.addChild(Asteroid(model: obj, tiles: tileMap!))
@@ -63,32 +66,33 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
       }
     }
 
-    moveTo(planets["Earth"]!)
     physicsWorld.contactDelegate = self
+    turnState = TurnState.TURN_DONE
+    nextShip = Int(model!.turnCount) % ships.count - 1
+    getNextPlayer()
   }
 
-  func startGame(watcher: ShipInformationWatcher?, names: [PlayerModel]) {
-    nextPlayer = 0
-    self.watcher = watcher
-    let earth = planets["Earth"]
-    players.removeAll()
-    remainingPlanets.removeAll()
-    for name in names {
-      let player = Player(name, on: earth!)
-      player.ship.setWatcher(watcher)
-      players.append(player)
-      remainingPlanets[name.name!] = Set<Planet>()
-      for (_, planet) in planets {
-        if planet.model.gravity == GravityStrength.Full {
-          remainingPlanets[name.name!]?.insert(planet)
-        }
+  func resetGameState() {
+    let board = BoardFactory(width: tileMap!.numberOfColumns,
+                             height: tileMap!.numberOfRows,
+                             context: context,
+                             system: SolDescription(),
+                             game: model!)
+    board.build()
+    let earth = board.lookup(name: "Earth")
+    for player in model!.playerList {
+      player.state = PlayerState.Playing
+      for ship in player.shipList {
+        // the ships start landed on earth
+        ship.reset();
+        ship.landOn(planet: earth)
+        // add all of the goals to each ship
+        ship.addToRaceGoals(board.raceGoals as NSSet)
       }
     }
-    turnState = TurnState.WAITING_FOR_DIRECTION
-    livePlayers = players.count
-    players[nextPlayer].ship.startTurn()
-    turns = 1
-    watcher?.startTurn(player: players[nextPlayer].model.name!)
+    model?.turnCount = 0
+    model?.state = GameState.IN_PROGRESS
+    save(context: context)
   }
 
   let PAN_SLOWDOWN: CGFloat = 20.0
@@ -123,17 +127,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
   func getNextPlayer() {
     if turnState == TurnState.TURN_DONE {
-      for i in 1 ... players.count {
-        let candidate = (nextPlayer + i) % players.count
-        if !players[candidate].model.hasLost {
-          if candidate <= nextPlayer {
-            turns += 1
-          }
-          nextPlayer = candidate
-          moveTo(players[nextPlayer].ship)
-          watcher?.startTurn(player: players[nextPlayer].model.name!)
-          players[nextPlayer].ship.startTurn()
+      for i in 1 ... ships.count {
+        model!.turnCount += 1
+        let candidate = (nextShip + i) % ships.count
+        let ship = ships[candidate]
+        if ship.model.state! != ShipState.Destroyed {
+          nextShip = candidate
+          moveTo(ship)
+          watcher?.startTurn(ship: ship)
+          ship.startTurn()
           turnState = TurnState.WAITING_FOR_DIRECTION
+          save(context: context)
           return
         }
       }
@@ -145,14 +149,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     case .WAITING_FOR_DIRECTION, .GAME_OVER:
       break
     case .MOVING:
-      let ship = players[nextPlayer].ship
+      let ship = ships[nextShip]
       if !ship.arrows!.hasActions() && !ship.hasActions() &&
         (watcher == nil || !watcher!.handleNextNotification()) {
         ship.endTurn()
-        if remainingPlanets[ship.player.name!]?.count == 0 {
-          print("\(ship.player.name!) won")
+        if ship.model.raceGoalSet.count == 0 {
+          print("\(ship.model.fullName) won")
           turnState = TurnState.GAME_OVER
-          winner = ship.player
+          ship.model.player?.state = PlayerState.Won
+          save(context: context)
           watcher?.endGame(self)
         } else {
           watcher?.shipDoneMoving(ship: ship)
@@ -163,20 +168,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
   }
 
-  func getGameState() -> String {
-    if let win = winner {
-      return "\(win.name!) won in \(turns) turns"
-    } else if turnState == TurnState.GAME_OVER {
-      return "Everyone died."
-    } else {
-      return "In turn \(turns)"
-    }
-  }
-
   func shipDeath(ship: SpaceShip) {
-    print("Player \(ship.player.model.name!) died - \(ship.model.deathReason!)")
-    livePlayers -= 1
-    if livePlayers == 0 {
+    print("Ship \(ship.model.fullName) died - \(ship.model.deathReason!)")
+    liveShips -= 1
+    if liveShips == 0 {
       turnState = TurnState.GAME_OVER
     } else {
       turnState = TurnState.TURN_DONE
@@ -188,7 +183,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
       if let planet = other as? Planet {
         ship.crash(reason: "Ship \(ship.name!) crashed in to \(planet.name!)")
       } else if let gravity = other as? GravityArrow {
-        remainingPlanets[ship.player.model.name!]?.remove(gravity.planet)
+        ship.model.removeFromRaceGoals(gravity.planet.model)
         ship.enterGravity(gravity)
       } else if let asteroid = other as? Asteroid {
         ship.enterAsteroids(asteroid)

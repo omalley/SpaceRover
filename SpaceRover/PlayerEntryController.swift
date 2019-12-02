@@ -52,7 +52,9 @@ class PlayerEntryController: UIViewController, UIPickerViewDelegate, UIPickerVie
   func getPlayerInfo(context: NSManagedObjectContext) -> PlayerModel? {
     let result = PlayerModel(context: context)
     result.name = playerName.text
-    result.shipName = shipName.text
+    let ship = ShipModel(context: context)
+    ship.name = shipName.text
+    ship.player = result
     result.color = pickedColor
     return result;
   }

@@ -37,21 +37,38 @@ extension BoardObjectModel {
     }
   }
 
-  func toSlant() -> SlantPoint {
-    return SlantPoint(x: Int(positionX), y: Int(positionY))
+  var position: SlantPoint {
+    get { return SlantPoint(x: Int(positionX), y: Int(positionY))}
+    set(value) {
+      positionX = Int32(value.x)
+      positionY = Int32(value.y)
+    }
   }
 }
 
 let HEX_SIZE = 110.0
 
-class Planet: SKSpriteNode {
+class BoardObject: SKSpriteNode {
   let model: BoardObjectModel
 
-  init(model: BoardObjectModel, tiles: SKTileMapNode) {
-    let name = model.name!
-    let texture = SKTexture(imageNamed: name)
+  init(model: BoardObjectModel, texture: SKTexture, tiles: SKTileMapNode) {
     self.model = model
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
+    position = slantToView(model.position, tiles: tiles)
+    zPosition = 10
+  }
+
+  required init?(coder aDecoder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+}
+
+class Planet: BoardObject {
+
+  init(model: BoardObjectModel, tiles: SKTileMapNode) {
+    let texture = SKTexture(imageNamed: model.name!)
+    super.init(model: model, texture: texture, tiles: tiles)
+    let name = model.name!
     let nameLabel = SKLabelNode(text: name)
     nameLabel.zPosition = 1
     nameLabel.position = CGPoint(x: 0, y: 25)
@@ -59,8 +76,6 @@ class Planet: SKSpriteNode {
     nameLabel.fontName = UiFontName
     addChild(nameLabel)
     self.name = name
-    position = slantToView(model.toSlant(), tiles: tiles)
-    zPosition = 10
     let gravity = model.gravity!
     if gravity != GravityStrength.None {
       for direction in HexDirection.all() {
@@ -83,20 +98,16 @@ class Planet: SKSpriteNode {
   }
 }
 
-class Asteroid: SKSpriteNode {
+class Asteroid: BoardObject {
 
   static let textures = [SKTexture(imageNamed: "Asteroids1"),
                          SKTexture(imageNamed: "Asteroids2")]
-  let model: BoardObjectModel
 
   init(model: BoardObjectModel, tiles: SKTileMapNode) {
-    let slant = model.toSlant()
     let texture = Asteroid.textures[Int(arc4random_uniform(2))]
-    self.model = model
-    super.init(texture: texture, color: UIColor.clear, size: texture.size())
+    super.init(model: model, texture: texture, tiles: tiles)
+    let slant = model.position
     name = "asteroid at \(slant.x), \(slant.y)"
-    position = slantToView(slant, tiles: tiles)
-    zPosition = 10
     physicsBody = SKPhysicsBody(circleOfRadius: CGFloat(HEX_SIZE * model.radius))
     physicsBody?.categoryBitMask = asteroidsContactMask
     physicsBody?.contactTestBitMask = shipContactMask

@@ -51,23 +51,64 @@ extension GameModel {
       stateRaw = value!.rawValue
     }
   }
-}
 
-class Game {
-  let model: GameModel
+  var playerList: [PlayerModel] {
+    return players!.array as! [PlayerModel]
+  }
 
-  init(context: NSManagedObjectContext, tiles: SKTileMapNode) {
-    do {
-      let gameList = try context.fetch(GameModel.fetchRequest())
-      if gameList.count >= 1 {
-        model = gameList[0] as! GameModel
-      } else {
-        model = GameModel(context: context)
-        model.scenario = .RACE_CLASSIC
-        model.state = .NOT_STARTED
+  var winner: PlayerModel? {
+    for player in playerList {
+      if player.state == PlayerState.Won {
+        return player
       }
-    } catch let error as NSError {
-      fatalError("Error loading board: \(error), \(error.userInfo)")
     }
+    return nil
+  }
+
+  /**
+   * Get the number of complete turns that have occurred.
+   */
+  var turnNumber: Int {
+    let numPlayers = players!.count
+    return (Int(turnCount) + numPlayers - 1) / numPlayers
+  }
+
+  func getGameState() -> String {
+    switch state! {
+    case .NOT_STARTED:
+      return "Not started"
+    case .IN_PROGRESS:
+      return "In turn \(turnNumber)"
+    case .FINISHED:
+      if let winner = winner {
+        return "\(winner.name!) won in \(turnNumber) turns"
+      } else {
+        return "Everyone died."
+      }
+    }
+  }
+
+  /** Get the status of the given player in the game.
+   */
+  func getPlayerStatus(_ player: PlayerModel) -> String {
+    // When we have different games, there should be an upper level
+    // switch on the game.
+    let ship = player.shipList[0]
+    switch player.state! {
+    case .Lost:
+      return ship.deathReason!
+    case .Won:
+      return "Won in \(turnNumber) turns."
+    case .Playing:
+      let goals = Array(ship.raceGoalSet)
+        .map {$0.name!}
+        .sorted()
+        .joined(separator: ", ");
+      return "Remaining: \(goals)"
+    }
+  }
+
+  func buildBoard() {
+    
   }
 }

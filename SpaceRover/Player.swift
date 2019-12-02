@@ -9,6 +9,10 @@
 import CoreData
 import SpriteKit
 
+enum PlayerState: Int16 {
+  case Playing = 0, Lost, Won;
+}
+
 extension PlayerModel {
   var color: SpaceshipColor? {
     get {
@@ -18,6 +22,19 @@ extension PlayerModel {
       colorRaw = value!.rawValue
     }
   }
+
+  var state: PlayerState? {
+    get {
+      return PlayerState(rawValue: stateRaw)
+    }
+    set(value) {
+      stateRaw = value!.rawValue
+    }
+  }
+
+  var shipList: [ShipModel] {
+    return ships!.array as! [ShipModel]
+  }
 }
 
 func save(context: NSManagedObjectContext) {
@@ -26,21 +43,6 @@ func save(context: NSManagedObjectContext) {
       try context.save()
     } catch let error as NSError {
       fatalError("Error saving data: \(error), \(error.userInfo)")
-    }
-  }
-}
-
-class Player {
-  var ships = [SpaceShip]()
-  let model: PlayerModel
-
-  init(_ model: PlayerModel, tiles: SKTileMapNode) {
-    self.model = model
-    if let shipList = model.ships {
-      for ship in shipList {
-        ships.append(SpaceShip(model: ship as! ShipModel, player: self,
-                               tiles: tiles))
-      }
     }
   }
 }

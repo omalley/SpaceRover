@@ -99,6 +99,20 @@ extension ShipModel {
     }
   }
 
+  var fullName: String {
+    return "\(player!.name!)'s \(name!)"
+  }
+
+  var raceGoalSet: Set<BoardObjectModel> {
+    return raceGoals! as! Set<BoardObjectModel>
+  }
+
+  func reset() {
+    deathReason = nil
+    disabledTurns = 0
+    mutableSetValue(forKey: "raceGoals").removeAllObjects()
+  }
+
   func move() {
     positionX += velocityX
     positionY += velocityY
@@ -132,10 +146,11 @@ extension ShipModel {
   func landOn(planet: BoardObjectModel) {
     state = .Landed
     fuel = fuelCapacity
-    positionX = planet.positionX
-    positionY = planet.positionY
+    extraBurns = 1
+    position = planet.position
     velocityX = 0
     velocityY = 0
+    disabledTurns = 0
     orbitAround = planet
   }
 
@@ -148,7 +163,7 @@ extension ShipModel {
                   direction: HexDirection) {
     state = .Flight
     orbitAround = nil
-    position = planet.toSlant() + direction.toSlant()
+    position = planet.position + direction.toSlant()
     velocity = direction.invert().toSlant()
   }
 }
@@ -168,7 +183,7 @@ protocol ShipInformationWatcher {
   func updateShipInformation(_ msg: String)
   func optionalHalfGravity(ship: SpaceShip, gravity: GravityArrow)
   func crash(ship:SpaceShip)
-  func startTurn(player: String)
+  func startTurn(ship: SpaceShip)
   func shipMoving(ship: SpaceShip)
   func shipDoneMoving(ship: SpaceShip)
   func endGame(_ : GameScene)
@@ -186,7 +201,6 @@ func rollDie() -> Int {
 
 class SpaceShip: SKSpriteNode {
   let tileMap: SKTileMapNode
-  let player: Player
   let turnIndicator: SKSpriteNode
   var arrows : DirectionKeypad?
   var watcher: ShipInformationWatcher?
@@ -198,15 +212,14 @@ class SpaceShip: SKSpriteNode {
   // every other half gravity is optional.
   var halfGravityHits = 0
 
-  init (model: ShipModel, player: Player, tiles: SKTileMapNode) {
+  init (model: ShipModel, tiles: SKTileMapNode) {
     tileMap = tiles
     self.model = model
-    self.player = player
-    let texture = player.model.color!.image()
+    let texture = model.player!.color!.image()
     let turnIndicatorTexture = SKTexture(imageNamed: "CurrentTurnIndicator")
     turnIndicator = SKSpriteNode(texture: turnIndicatorTexture)
     super.init(texture: texture, color: UIColor.clear, size: texture.size())
-    self.name = name
+    self.name = model.fullName
     position = slantToView(model.position, tiles: tileMap)
     tileMap.addChild(self)
     arrows = DirectionKeypad(ship: self)
@@ -421,7 +434,7 @@ class DirectionKeypad: SKNode {
 
   init(ship: SpaceShip) {
     super.init()
-    name = "DirectionKeypad for \(ship.name!)"
+    name = "DirectionKeypad for \(ship.model.name!)"
     alpha = 1
     zPosition = 50
     isUserInteractionEnabled = true
