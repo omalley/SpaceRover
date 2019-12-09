@@ -160,8 +160,6 @@ class GameViewController: UIViewController, ShipInformationWatcher {
             
       /* Set the scale mode to scale to fit the window */
       scene.scaleMode = .resizeFill
-            
-      skView.presentScene(scene)
     }
   }
 
@@ -169,7 +167,7 @@ class GameViewController: UIViewController, ShipInformationWatcher {
    * Scene is displayed, go ahead and start the game
    */
   override func viewDidAppear(_ animated: Bool) {
-    //TODO?
+    (view as! SKView).presentScene(game!)
   }
 
   override var shouldAutorotate : Bool {

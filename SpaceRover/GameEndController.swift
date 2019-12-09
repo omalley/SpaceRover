@@ -38,6 +38,4 @@ class GameEndController: UIViewController, UITableViewDataSource {
     cell.detailTextLabel?.text = model?.getPlayerStatus(player)
     return cell
   }
-  
-
 }

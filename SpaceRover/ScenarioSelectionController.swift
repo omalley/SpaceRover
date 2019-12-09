@@ -45,6 +45,7 @@ UIPickerViewDelegate, UIPickerViewDataSource {
       alert.addAction(okayAction)
       present(alert, animated: true)
     } else {
+      game!.state = GameState.NOT_STARTED
       performSegue(withIdentifier: "startGame", sender: self)
     }
   }
