@@ -75,7 +75,7 @@ class GameViewController: UIViewController, ShipInformationWatcher {
     game?.doPan(sender.velocity(in: self.view))
   }
 
-  func viewPlanetMenu() {
+  func viewPlanetMenu(_ sender: UIButton) {
     let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
     if let game = game {
       for (name, planet) in game.planets {
@@ -88,10 +88,14 @@ class GameViewController: UIViewController, ShipInformationWatcher {
       }
     }
     alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+    if let popoverController = alert.popoverPresentationController {
+        popoverController.sourceView = sender
+        popoverController.sourceRect = sender.bounds
+    }
     present(alert, animated: true)
   }
 
-  func viewShipMenu() {
+  func viewShipMenu(_ sender: UIButton) {
     let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
     if let game = game {
       for ship in game.ships {
@@ -104,6 +108,10 @@ class GameViewController: UIViewController, ShipInformationWatcher {
       }
     }
     alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+    if let popoverController = alert.popoverPresentationController {
+        popoverController.sourceView = sender
+        popoverController.sourceRect = sender.bounds
+    }
     present(alert, animated: true)
   }
 
@@ -116,11 +124,11 @@ class GameViewController: UIViewController, ShipInformationWatcher {
     let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
 
     alert.addAction(UIAlertAction(title: "View planet ...", style: .default) {
-      _ in self.viewPlanetMenu()
+      _ in self.viewPlanetMenu(sender)
     })
 
     alert.addAction(UIAlertAction(title: "View ship ...", style: .default) {
-      _ in self.viewShipMenu()
+      _ in self.viewShipMenu(sender)
     })
 
     alert.addAction(UIAlertAction(title: "Game Status", style: .default) {
@@ -134,7 +142,10 @@ class GameViewController: UIViewController, ShipInformationWatcher {
       }
     })
     alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-
+    if let popoverController = alert.popoverPresentationController {
+        popoverController.sourceView = sender
+        popoverController.sourceRect = sender.bounds
+    }
     present(alert, animated: true)
   }
 
