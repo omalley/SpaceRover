@@ -116,8 +116,7 @@ class GameViewController: UIViewController, ShipInformationWatcher {
   }
 
   func selfDestruct(ship: SpaceShip) {
-    ship.model.crash(reason: "self-destruct")
-    game?.watcher?.crash(ship: ship)
+    ship.crash(reason: "self-destruct")
   }
 
   @IBAction func menuButton(_ sender: UIButton) {
