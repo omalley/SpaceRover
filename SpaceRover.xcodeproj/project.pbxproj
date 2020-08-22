@@ -516,7 +516,7 @@
 				CODE_SIGN_ENTITLEMENTS = SpaceRover/SpaceRover.entitlements;
 				DEVELOPMENT_TEAM = F4649V9FGA;
 				INFOPLIST_FILE = SpaceRover/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.6;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = SpaceRover;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -532,7 +532,7 @@
 				CODE_SIGN_ENTITLEMENTS = SpaceRover/SpaceRover.entitlements;
 				DEVELOPMENT_TEAM = F4649V9FGA;
 				INFOPLIST_FILE = SpaceRover/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.6;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = SpaceRover;
 				PRODUCT_NAME = "$(TARGET_NAME)";

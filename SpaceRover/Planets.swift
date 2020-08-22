@@ -150,6 +150,9 @@ class GravityArrow: SKSpriteNode {
                                  CGPoint(x:0, y:64),
                                  CGPoint(x:111, y:0)])
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
+    self.xScale = 0.2
+    self.yScale = 0.2
+    self.anchorPoint = CGPoint(x:1, y:0.5)
     self.name = "\(strength) gravity \(direction) toward \(planet.name!)"
     zPosition = 10
     alpha = 0.6
@@ -159,8 +162,7 @@ class GravityArrow: SKSpriteNode {
     physicsBody?.contactTestBitMask = shipContactMask
     physicsBody?.collisionBitMask = 0
     physicsBody?.isDynamic = false
-    let sixtyDegree = Double.pi / 3
-    run(SKAction.rotate(byAngle: CGFloat(sixtyDegree + direction.rotateAngle()), duration: 0))
+    run(SKAction.rotate(byAngle: CGFloat(direction.rotateAngle()), duration: 0))
   }
 
   required init?(coder aDecoder: NSCoder) {

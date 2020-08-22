@@ -171,17 +171,17 @@ extension HexDirection {
     switch (self) {
     case .NoAcc:
       return 0
-    case .NorthEast:
-      return 0
-    case .East:
-      return 5*Double.pi/3
-    case .SouthEast:
-      return 4*Double.pi/3
-    case .SouthWest:
-      return 3*Double.pi/3
     case .West:
-      return 2*Double.pi/3
+      return 0
     case .NorthWest:
+      return 5*Double.pi/3
+    case .NorthEast:
+      return 4*Double.pi/3
+    case .East:
+      return 3*Double.pi/3
+    case .SouthEast:
+      return 2*Double.pi/3
+    case .SouthWest:
       return 1*Double.pi/3
     }
   }

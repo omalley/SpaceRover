@@ -293,6 +293,8 @@ class SpaceShip: SKSpriteNode {
     turnIndicator.isHidden = true
     super.init(texture: texture, color: UIColor.clear, size: texture.size())
     self.name = model.fullName
+    self.xScale = 0.35
+    self.yScale = 0.35
     position = slantToView(model.position, tiles: tileMap)
     isHidden = model.state == ShipState.Destroyed ||
       model.state == ShipState.Landed
@@ -542,6 +544,8 @@ class DirectionArrow: SKSpriteNode {
     } else {
       let texture = SKTexture(imageNamed: "MovementArrow")
       super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
+      self.xScale = 0.2
+      self.yScale = 0.2
     }
     name = "\(direction) arrow for \(ship.name!)"
     alpha = 0.4
