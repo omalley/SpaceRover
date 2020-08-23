@@ -144,7 +144,7 @@ extension GameModel {
     let ship = player.shipList[0]
     switch player.state! {
     case .Lost:
-      return ship.deathReason!
+      return "Lost - \(ship.deathReason!)"
     case .Won:
       return "Won in \(turnNumber) turns."
     case .Playing:
@@ -152,7 +152,7 @@ extension GameModel {
         .map {$0.name!}
         .sorted()
         .joined(separator: ", ");
-      return "Missing: \(goals)"
+      return "Remaining goals: \(goals)"
     }
   }
 }

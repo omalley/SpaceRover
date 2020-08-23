@@ -298,6 +298,7 @@
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" restorationIdentifier="PlayerDetail" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="lFK-Yk-aZ1" userLabel="PlayerDetail">
                                 <rect key="frame" x="20" y="63" width="374" height="699"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="sectionIndexColor" systemColor="systemGreenColor" red="0.20392156859999999" green="0.78039215689999997" blue="0.34901960780000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <prototypes>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="gameEndPlayerInfo" textLabel="iSe-wC-VzX" detailTextLabel="KyJ-av-0Rb" style="IBUITableViewCellStyleValue2" id="ufS-CN-pIx">
                                         <rect key="frame" x="0.0" y="28" width="374" height="44"/>
@@ -395,6 +396,7 @@
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" restorationIdentifier="PlayerDetail" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="GqZ-mQ-485" userLabel="PlayerDetail">
                                 <rect key="frame" x="20" y="70" width="374" height="654"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="sectionIndexColor" systemColor="systemGreenColor" red="0.20392156859999999" green="0.78039215689999997" blue="0.34901960780000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <prototypes>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="gameEndPlayerInfo" textLabel="Ij6-ag-qQp" detailTextLabel="Hga-w8-iu6" style="IBUITableViewCellStyleValue2" id="Uhh-aK-bvh">
                                         <rect key="frame" x="0.0" y="28" width="374" height="44"/>

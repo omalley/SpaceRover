@@ -154,6 +154,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
   func shipDeath(ship: SpaceShip) {
     print("Ship \(ship.model.fullName) died - \(ship.model.deathReason!)")
+    ship.model.player!.state = .Lost
     if model!.liveShips() == 0 {
       turnState = TurnState.GAME_OVER
     } else {
