@@ -293,8 +293,8 @@ class SpaceShip: SKSpriteNode {
     turnIndicator.isHidden = true
     super.init(texture: texture, color: UIColor.clear, size: texture.size())
     self.name = model.fullName
-    self.xScale = 0.35
-    self.yScale = 0.35
+    self.xScale = 0.30
+    self.yScale = 0.30
     position = slantToView(model.position, tiles: tileMap)
     isHidden = model.state == ShipState.Destroyed ||
       model.state == ShipState.Landed

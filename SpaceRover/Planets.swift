@@ -143,12 +143,12 @@ class GravityArrow: SKSpriteNode {
 
     // Create the hexagon with the additional wedge toward the planet
     let bodyShape = CGMutablePath()
-    bodyShape.addLines(between: [CGPoint(x:111, y:0),
+    bodyShape.addLines(between: [CGPoint(x:-111, y:0),
                                  CGPoint(x:0, y:-64),
-                                 CGPoint(x:-55, y:-32),
-                                 CGPoint(x:-55, y:32),
+                                 CGPoint(x:55, y:-32),
+                                 CGPoint(x:55, y:32),
                                  CGPoint(x:0, y:64),
-                                 CGPoint(x:111, y:0)])
+                                 CGPoint(x:-111, y:0)])
     super.init(texture: texture, color: UIColor.clear, size: (texture.size()))
     self.xScale = 0.2
     self.yScale = 0.2
@@ -162,7 +162,7 @@ class GravityArrow: SKSpriteNode {
     physicsBody?.contactTestBitMask = shipContactMask
     physicsBody?.collisionBitMask = 0
     physicsBody?.isDynamic = false
-    run(SKAction.rotate(byAngle: CGFloat(direction.rotateAngle()), duration: 0))
+    zRotation = CGFloat(direction.rotateAngle())
   }
 
   required init?(coder aDecoder: NSCoder) {
