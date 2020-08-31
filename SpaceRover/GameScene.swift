@@ -14,6 +14,7 @@ enum TurnState {
 }
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
+  let HEX_SIZE = CGSize(width: 111, height: 128)
   var model: GameModel?
   // What part of the turn are we in?
   var turnState = TurnState.WAITING_FOR_DIRECTION
@@ -27,13 +28,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     return delegate!.persistentContainer.viewContext
   }()
 
+  func boardSize() -> (Int, Int) {
+    return (100, 100)
+  }
+
   override func didMove(to view: SKView) {
-    /* Setup your scene here */
-    for child in children {
-      if child.name == "Tile Map" {
-        tileMap = (child as! SKTileMapNode)
-      }
-    }
+    let size = boardSize()
+    let tileSet = SKTileSet(named: "RoverTiles")
+    tileMap = SKTileMapNode(tileSet: tileSet!, columns: size.0,
+                            rows: size.1, tileSize: HEX_SIZE,
+                            fillWith: tileSet!.defaultTileGroup!)
+    addChild(tileMap!)
     tileMap?.isUserInteractionEnabled = true
 
     if model?.state == GameState.NOT_STARTED {

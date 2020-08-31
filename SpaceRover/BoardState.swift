@@ -211,21 +211,21 @@ class SolDescription: SolarSystemDescription {
     // Earth moon
     PlanetInformation(name: "Luna", kind: .Moon, radius: 0.1, isLandable:false,
                       gravity: .Half, orbiting: EARTH,
-                      orbitDistance: 2.56, //  0.384 million km
+                      orbitDistance: 2, //  0.384 million km
                       classicLocation: SlantPoint(x:54, y:30)),
 
     // Jupiter moons
     PlanetInformation(name: "Io", kind: .Moon, radius: 0.1, isLandable: false,
                       gravity: .Half, orbiting: JUPITER,
-                      orbitDistance: 2.81, // 0.422 million km
+                      orbitDistance: 2.2, // 0.422 million km
                       classicLocation: SlantPoint(x:59, y:57)),
     PlanetInformation(name: "Ganymede", kind: .Moon, radius: 0.1,
                       isLandable: false, gravity: .Full, orbiting: JUPITER,
-                      orbitDistance: 7.13, // 1.070 million km
+                      orbitDistance: 5.57, // 1.070 million km
                       classicLocation: SlantPoint(x:63, y:61)),
     PlanetInformation(name: "Callisto", kind: .Moon, radius: 0.1,
                       isLandable: true, gravity: .Full, orbiting: JUPITER,
-                      orbitDistance: 12.55, // 1.883 million km
+                      orbitDistance: 9.55, // 1.883 million km
                       classicLocation: SlantPoint(x:54, y:59))
   ]
 
