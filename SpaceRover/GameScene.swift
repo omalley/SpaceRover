@@ -28,22 +28,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     return delegate!.persistentContainer.viewContext
   }()
 
-  func boardSize() -> (Int, Int) {
-    return (100, 100)
-  }
-
   override func didMove(to view: SKView) {
-    let size = boardSize()
-    let tileSet = SKTileSet(named: "RoverTiles")
-    tileMap = SKTileMapNode(tileSet: tileSet!, columns: size.0,
-                            rows: size.1, tileSize: HEX_SIZE,
-                            fillWith: tileSet!.defaultTileGroup!)
-    addChild(tileMap!)
-    tileMap?.isUserInteractionEnabled = true
-
+    // If we are just starting the game, reset it.
     if model?.state == GameState.NOT_STARTED {
       resetGameState()
     }
+
+    // Add the hex tile map
+    let tileSet = SKTileSet(named: "RoverTiles")
+    tileMap = SKTileMapNode(tileSet: tileSet!,
+                            columns: Int(model!.boardWidth),
+                            rows: Int(model!.boardHeight),
+                            tileSize: HEX_SIZE,
+                            fillWith: tileSet!.defaultTileGroup!)
+    addChild(tileMap!)
+    tileMap?.isUserInteractionEnabled = true
 
     ships.removeAll()
     for player in model!.playerList {
@@ -71,9 +70,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   }
 
   func resetGameState() {
-    let board = BoardFactory(width: tileMap!.numberOfColumns,
-                             height: tileMap!.numberOfRows,
-                             context: context,
+    let board = BoardFactory(context: context,
                              system: SolDescription(),
                              game: model!)
     board.build()

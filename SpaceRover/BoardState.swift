@@ -35,7 +35,7 @@ struct PlanetInformation {
 protocol SolarSystemDescription {
   var sun: PlanetInformation {get}
   var planets: [PlanetInformation] {get}
-  var classicAsteroids: [SlantPoint] {get}
+  var classicAsteroids: [AppleHex] {get}
 
   /**
    * What is the probability that a hex the given distance to the sun has an asteroid?
@@ -46,19 +46,14 @@ protocol SolarSystemDescription {
 
 class BoardFactory {
   private let system: SolarSystemDescription
-  private let width: Int
-  private let height: Int
   private let context: NSManagedObjectContext
   private let game: GameModel
   private var planets = [String: BoardObjectModel]()
   var raceGoals = Set<BoardObjectModel>()
 
-  init(width: Int, height: Int,
-       context: NSManagedObjectContext,
+  init(context: NSManagedObjectContext,
        system: SolarSystemDescription,
        game: GameModel) {
-    self.width = width
-    self.height = height
     self.context = context
     self.system = system
     self.game = game
@@ -68,8 +63,10 @@ class BoardFactory {
     clear()
     switch game.scenario! {
     case .RACE_CLASSIC:
+      game.setBoardSize(width: 35, height: 51)
       classicLocations()
     case .RACE_RANDOM:
+      game.setBoardSize(width: 100, height: 100)
       randomizeLocations()
     }
     save(context: context)
@@ -86,7 +83,7 @@ class BoardFactory {
       addPlanet(planet, location: planet.classicLocation)
     }
     for asteroid in system.classicAsteroids {
-      addAsteroid(location: asteroid)
+      addAsteroid(location: asteroid.toSlantPoint())
     }
   }
 
@@ -119,36 +116,44 @@ class BoardFactory {
     return planets[name]!
   }
 
-  func pickLocation(origin: SlantPoint, distance: Double) -> SlantPoint {
+  func pickLocation(origin: SlantPoint,
+                    distance: Double,
+                    width: Int,
+                    height: Int) -> SlantPoint {
     while true {
       let theta = Double(nextRandom(min: 0, max: 3599)) / 10.0
       let point = origin.addPolar(degree: theta, distance: distance)
 
       // check whether the position is in the board
       let apple = point.toAppleHex()
-      if apple.column >= 0 && apple.column < width &&
-        apple.row >= 0 && apple.row < height {
+      if apple.x >= 0 && apple.x < width &&
+        apple.y >= 0 && apple.y < height {
         print("Pick polar of theta = \(theta) distance = \(distance)")
-        print("Slant = \(point.x), \(point.y); Apple = \(apple.column), \(apple.row)")
+        print("Slant = \(point.x), \(point.y); Apple = \(apple.x), \(apple.y)")
         return point
       }
     }
   }
 
   func randomizeLocations(){
-    let sunLocation = system.sun.classicLocation
+    let height = Int(game.boardHeight)
+    let width = Int(game.boardWidth)
+    let sunLocation = AppleHex(x: width / 2, y: height / 2).toSlantPoint()
     for planetInfo in system.planets {
       var spLoc = sunLocation
       if let orbiting = planetInfo.orbiting {
         let parent = planets[orbiting]!.position
         print("Pick location of \(planetInfo.name) relative to \(orbiting) at \(parent)")
-        spLoc = pickLocation(origin: parent, distance: planetInfo.orbitDistance)
+        spLoc = pickLocation(origin: parent,
+                             distance: planetInfo.orbitDistance,
+                             width: width,
+                             height: height)
       }
       addPlanet(planetInfo, location: spLoc)
     }
     for row in 0 ... height {
       for column in 0 ... width {
-        let slant = AppleHex(column: column, row: row).toSlantPoint()
+        let slant = AppleHex(x: column, y: row).toSlantPoint()
         if Int(system.asteroidProbability(slant.distance(sunLocation)) * 1000)
             >=  nextRandom(min: 0, max: 999){
           addAsteroid(location: slant)
@@ -180,131 +185,133 @@ class SolDescription: SolarSystemDescription {
   let planets: [PlanetInformation] = [
     PlanetInformation(name: SOL, kind: .Star, radius:0.5, isLandable: false,
                       gravity: .Full, orbiting: nil, orbitDistance: 0,
-                      classicLocation: SlantPoint(x:39, y:23)),
+                      classicLocation: AppleHex(x:15, y:11).toSlantPoint()),
 
     // Planets
     PlanetInformation(name: "Mercury", kind: .Planet, radius: 0.14,
                       isLandable: false, gravity: .Full, orbiting: SOL,
                       orbitDistance: 3.9,  // 57.91 million km
-                      classicLocation: SlantPoint(x:40, y:20)),
+                      classicLocation: AppleHex(x:18, y:8).toSlantPoint()),
     PlanetInformation(name: "Venus", kind: .Planet, radius: 0.24,
                       isLandable: true, gravity: .Full, orbiting: SOL,
                       orbitDistance: 7.2, // 108.2 million km
-                      classicLocation: SlantPoint(x:31, y:19)),
+                      classicLocation: AppleHex(x:9, y:7).toSlantPoint()),
     PlanetInformation(name: EARTH, kind: .Planet, radius: 0.25,
                       isLandable: true, gravity:.Full, orbiting: SOL,
                       orbitDistance: AU_DISTANCE, // 149.6 million km
-                      classicLocation: SlantPoint(x:51, y:29)),
+                      classicLocation: AppleHex(x:25, y:17).toSlantPoint()),
     PlanetInformation(name: "Mars", kind: .Planet, radius: 0.20,
                       isLandable: true, gravity: .Full, orbiting: SOL,
                       orbitDistance:15.2, // 227.9 million km
-                      classicLocation: SlantPoint(x:40, y:43)),
+                      classicLocation: AppleHex(x:6, y:31).toSlantPoint()),
     PlanetInformation(name: JUPITER, kind: .Planet, radius: 0.45,
                       isLandable: false, gravity:.Full, orbiting: SOL,
                       orbitDistance: 51.9, // 778.5 million km
-                      classicLocation: SlantPoint(x:59, y:59)),
+                      classicLocation: AppleHex(x:17, y:47).toSlantPoint()),
     PlanetInformation(name: "Ceres", kind: .Planet, radius: 0.12,
                       isLandable: false, gravity: .None, orbiting: SOL,
                       orbitDistance: 27.5, // 413 million km
-                      classicLocation: SlantPoint(x:47, y:50)),
+                      classicLocation: AppleHex(x:10, y:38).toSlantPoint()),
 
     // Earth moon
     PlanetInformation(name: "Luna", kind: .Moon, radius: 0.1, isLandable:false,
                       gravity: .Half, orbiting: EARTH,
                       orbitDistance: 2, //  0.384 million km
-                      classicLocation: SlantPoint(x:54, y:30)),
+                      classicLocation: AppleHex(x:28, y:18).toSlantPoint()),
 
     // Jupiter moons
     PlanetInformation(name: "Io", kind: .Moon, radius: 0.1, isLandable: false,
                       gravity: .Half, orbiting: JUPITER,
                       orbitDistance: 2.2, // 0.422 million km
-                      classicLocation: SlantPoint(x:59, y:57)),
+                      classicLocation: AppleHex(x:18, y:45).toSlantPoint()),
     PlanetInformation(name: "Ganymede", kind: .Moon, radius: 0.1,
                       isLandable: false, gravity: .Full, orbiting: JUPITER,
                       orbitDistance: 5.57, // 1.070 million km
-                      classicLocation: SlantPoint(x:63, y:61)),
+                      classicLocation: AppleHex(x:20, y:49).toSlantPoint()),
     PlanetInformation(name: "Callisto", kind: .Moon, radius: 0.1,
                       isLandable: true, gravity: .Full, orbiting: JUPITER,
                       orbitDistance: 9.55, // 1.883 million km
-                      classicLocation: SlantPoint(x:54, y:59))
+                      classicLocation: AppleHex(x:13, y:47).toSlantPoint())
   ]
 
   lazy var sun: PlanetInformation = { planets[0] }()
 
-  var classicAsteroids: [SlantPoint] = [
-    SlantPoint(x: 47, y:41),
-    SlantPoint(x: 49, y:41),
-    SlantPoint(x: 46, y:42),
-    SlantPoint(x: 50, y:42),
-    SlantPoint(x: 53, y:42),
-    SlantPoint(x: 55, y:42),
-    SlantPoint(x: 56, y:42),
-    SlantPoint(x: 48, y:43),
-    SlantPoint(x: 50, y:43),
-    SlantPoint(x: 53, y:43),
-    SlantPoint(x: 56, y:43),
-    SlantPoint(x: 59, y:43),
-    SlantPoint(x: 65, y:43),
-    SlantPoint(x: 46, y:44),
-    SlantPoint(x: 50, y:44),
-    SlantPoint(x: 51, y:44),
-    SlantPoint(x: 54, y:44),
-    SlantPoint(x: 57, y:44),
-    SlantPoint(x: 59, y:44),
-    SlantPoint(x: 61, y:44),
-    SlantPoint(x: 65, y:44),
-    SlantPoint(x: 66, y:44),
-    SlantPoint(x: 37, y:45),
-    SlantPoint(x: 48, y:45),
-    SlantPoint(x: 51, y:45),
-    SlantPoint(x: 52, y:45),
-    SlantPoint(x: 53, y:45),
-    SlantPoint(x: 55, y:45),
-    SlantPoint(x: 65, y:45),
-    SlantPoint(x: 68, y:45),
-    SlantPoint(x: 69, y:45),
-    SlantPoint(x: 36, y:46),
-    SlantPoint(x: 37, y:46),
-    SlantPoint(x: 38, y:46),
-    SlantPoint(x: 47, y:46),
-    SlantPoint(x: 49, y:46),
-    SlantPoint(x: 59, y:46),
-    SlantPoint(x: 62, y:46),
-    SlantPoint(x: 67, y:46),
-    SlantPoint(x: 38, y:47),
-    SlantPoint(x: 52, y:47),
-    SlantPoint(x: 55, y:47),
-    SlantPoint(x: 57, y:47),
-    SlantPoint(x: 59, y:47),
-    SlantPoint(x: 60, y:47),
-    SlantPoint(x: 62, y:47),
-    SlantPoint(x: 63, y:47),
-    SlantPoint(x: 65, y:47),
-    SlantPoint(x: 39, y:48),
-    SlantPoint(x: 41, y:48),
-    SlantPoint(x: 42, y:48),
-    SlantPoint(x: 57, y:48),
-    SlantPoint(x: 62, y:48),
-    SlantPoint(x: 64, y:48),
-    SlantPoint(x: 65, y:48),
-    SlantPoint(x: 68, y:48),
-    SlantPoint(x: 68, y:48),
-    SlantPoint(x: 69, y:48),
-    SlantPoint(x: 70, y:48),
-    SlantPoint(x: 43, y:49),
-    SlantPoint(x: 45, y:49),
-    SlantPoint(x: 48, y:49),
-    SlantPoint(x: 60, y:49),
-    SlantPoint(x: 63, y:49),
-    SlantPoint(x: 64, y:49),
-    SlantPoint(x: 67, y:49),
-    SlantPoint(x: 38, y:50),
-    SlantPoint(x: 39, y:50),
-    SlantPoint(x: 41, y:50),
-    SlantPoint(x: 59, y:50),
-    SlantPoint(x: 40, y:51),
-    SlantPoint(x: 39, y:52),
-    SlantPoint(x: 40, y:52),
+  var classicAsteroids: [AppleHex] = [
+    AppleHex(x: 0, y:35),
+    AppleHex(x: 0, y:39),
+    AppleHex(x: 0, y:41),
+    AppleHex(x: 1, y:35),
+    AppleHex(x: 1, y:39),
+    AppleHex(x: 1, y:41),
+    AppleHex(x: 2, y:34),
+    AppleHex(x: 2, y:35),
+    AppleHex(x: 2, y:36),
+    AppleHex(x: 2, y:37),
+    AppleHex(x: 2, y:40),
+    AppleHex(x: 3, y:39),
+    AppleHex(x: 4, y:37),
+    AppleHex(x: 5, y:37),
+    AppleHex(x: 6, y:38),
+    AppleHex(x: 8, y:38),
+    AppleHex(x: 11, y:33),
+    AppleHex(x: 11, y:35),
+    AppleHex(x: 11, y:38),
+    AppleHex(x: 12, y:31),
+    AppleHex(x: 13, y:34),
+    AppleHex(x: 13, y:35),
+    AppleHex(x: 14, y:30),
+    AppleHex(x: 14, y:32),
+    AppleHex(x: 15, y:33),
+    AppleHex(x: 16, y:30),
+    AppleHex(x: 16, y:31),
+    AppleHex(x: 16, y:32),
+    AppleHex(x: 16, y:33),
+    AppleHex(x: 16, y:34),
+    AppleHex(x: 16, y:36),
+    AppleHex(x: 17, y:34),
+    AppleHex(x: 18, y:34),
+    AppleHex(x: 19, y:31),
+    AppleHex(x: 19, y:32),
+    AppleHex(x: 19, y:33),
+    AppleHex(x: 19, y:36),
+    AppleHex(x: 20, y:34),
+    AppleHex(x: 20, y:37),
+    AppleHex(x: 21, y:31),
+    AppleHex(x: 21, y:36),
+    AppleHex(x: 21, y:39),
+    AppleHex(x: 22, y:31),
+    AppleHex(x: 22, y:32),
+    AppleHex(x: 22, y:33),
+    AppleHex(x: 23, y:35),
+    AppleHex(x: 23, y:36),
+    AppleHex(x: 23, y:38),
+    AppleHex(x: 24, y:33),
+    AppleHex(x: 24, y:36),
+    AppleHex(x: 25, y:32),
+    AppleHex(x: 25, y:37),
+    AppleHex(x: 26, y:33),
+    AppleHex(x: 26, y:35),
+    AppleHex(x: 26, y:36),
+    AppleHex(x: 26, y:37),
+    AppleHex(x: 26, y:38),
+    AppleHex(x: 27, y:36),
+    AppleHex(x: 27, y:37),
+    AppleHex(x: 27, y:38),
+    AppleHex(x: 28, y:32),
+    AppleHex(x: 28, y:33),
+    AppleHex(x: 28, y:37),
+    AppleHex(x: 29, y:36),
+    AppleHex(x: 30, y:33),
+    AppleHex(x: 30, y:34),
+    AppleHex(x: 30, y:38),
+    AppleHex(x: 31, y:32),
+    AppleHex(x: 31, y:33),
+    AppleHex(x: 31, y:35),
+    AppleHex(x: 31, y:37),
+    AppleHex(x: 32, y:37),
+    AppleHex(x: 33, y:34),
+    AppleHex(x: 33, y:37),
+    AppleHex(x: 34, y:34)
   ]
 
   /**

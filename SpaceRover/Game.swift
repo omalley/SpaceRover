@@ -155,4 +155,10 @@ extension GameModel {
       return "Remaining goals: \(goals)"
     }
   }
+
+  func setBoardSize(width: Int,
+                    height: Int) {
+    boardWidth = Int32(width)
+    boardHeight = Int32(height)
+  }
 }

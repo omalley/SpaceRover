@@ -30,11 +30,11 @@ import SpriteKit
  * back and forth, but generally a range of x and y define a box.
  */
 struct AppleHex {
-  var column: Int
-  var row: Int
+  var x: Int
+  var y: Int
 
   func toSlantPoint() -> SlantPoint {
-    return SlantPoint(x: column + ((row+1) / 2), y: row)
+    return SlantPoint(x: x + ((y+1) / 2), y: y)
   }
 }
 
@@ -63,7 +63,7 @@ struct SlantPoint: Equatable {
   }
 
   func toAppleHex() -> AppleHex {
-    return AppleHex(column: x - ((y+1) / 2), row: y)
+    return AppleHex(x: x - ((y+1) / 2), y: y)
   }
 
   /**

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="15508" systemVersion="19B88" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="16119" systemVersion="19G73" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="BoardObjectModel" representedClassName=".BoardObjectModel" syncable="YES" codeGenerationType="class">
         <attribute name="gravityRaw" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="isLandable" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
@@ -13,6 +13,8 @@
         <relationship name="needForRace" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="ShipModel" inverseName="raceGoals" inverseEntity="ShipModel"/>
     </entity>
     <entity name="GameModel" representedClassName="GameModel" syncable="YES" codeGenerationType="class">
+        <attribute name="boardHeight" optional="YES" attributeType="Integer 32" defaultValueString="100" usesScalarValueType="YES"/>
+        <attribute name="boardWidth" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="scenarioRaw" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="stateRaw" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="turnCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
@@ -44,9 +46,9 @@
         <relationship name="raceGoals" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="BoardObjectModel" inverseName="needForRace" inverseEntity="BoardObjectModel"/>
     </entity>
     <elements>
-        <element name="BoardObjectModel" positionX="-63" positionY="90" width="128" height="193"/>
-        <element name="GameModel" positionX="-63" positionY="99" width="128" height="118"/>
-        <element name="PlayerModel" positionX="-63" positionY="-18" width="128" height="118"/>
-        <element name="ShipModel" positionX="-54" positionY="0" width="128" height="268"/>
+        <element name="BoardObjectModel" positionX="408.62890625" positionY="-82.37109375" width="128" height="193"/>
+        <element name="GameModel" positionX="-99.2734375" positionY="78.3203125" width="128" height="148"/>
+        <element name="PlayerModel" positionX="75.90625" positionY="212.49609375" width="128" height="118"/>
+        <element name="ShipModel" positionX="250.15234375" positionY="155.12890625" width="128" height="268"/>
     </elements>
 </model>
